@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="hello">Hello World, MiddlewareMultimediaActivity!</string>
+    <string name="app_name">MiddlewareMultimedia</string>
+    
+    <string name="accesspointmode">Access Point Mode</string>
+    <string name="clientmode">Client mode</string>
+    
+    <string name="access_point">Acces Point</string>
+    <string name="client">Client</string>
+    <string name="create_ap">Create AP</string>
+    <string name="connection_profile">Send Connection Profile</string>
+    <string name="choose_permanet">Choose Permanet Access Point</string>
+
+</resources>
