@@ -10,6 +10,10 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 
+import com.middleware.listeners.AddressTable;
+import com.middleware.listeners.CreatePermanetAccessPoint;
+import com.middleware.listeners.NewAccessPoint;
+import com.middleware.model.AccessPoint;
 import com.middleware.model.Constants;
 import com.middleware.model.DataReceived;
 import com.middleware.model.MiddlewarePacket;
@@ -17,10 +21,13 @@ import com.middleware.model.Node;
 import com.middleware.model.NodeState;
 import com.multimedia.middleware.util.MiddlewareUtil;
 
-public class ClientActivity extends Activity implements DataReceived {
+public class ClientActivity extends Activity implements DataReceived, CreatePermanetAccessPoint, NewAccessPoint, AddressTable {
 	
 	NodeState state;
 	Node node;
+	
+	//if this node is chosen to become permanet access point
+	AccessPoint accessPoint;
 	
 	//UI elements
 	Button btnSendConnectionProfile;
@@ -54,7 +61,7 @@ public class ClientActivity extends Activity implements DataReceived {
 	    				node.startReceiverThread();
 	    				
 	    				//start by sending profile information!
-	    				join(state, Constants.TEMP_AP_PORT);
+	    				join(node, state, Constants.TEMP_AP_PORT);
 	    				
 	    				success = true;
 					}
@@ -71,7 +78,7 @@ public class ClientActivity extends Activity implements DataReceived {
         
     }
     
-    private boolean join(NodeState state, int port) throws Exception
+    private boolean join(Node node, NodeState state, int port) throws Exception
     {
     	boolean status = false;
     	
@@ -84,12 +91,19 @@ public class ClientActivity extends Activity implements DataReceived {
 		status = true;
     	
     	return status;
-    	
     }
     
     private void setListener()
     {
     	node.setDataReceived(this);
+    	node.setCreatePermanetAccessPoint(this);
+    	node.setNewAccessPointCreated(this);
+    }
+    
+    private void setAccessPointListener()
+    {
+    	accessPoint.setDataReceived(this);
+    	accessPoint.setAddressTable(this);
     }
 
 	@Override
@@ -99,5 +113,85 @@ public class ClientActivity extends Activity implements DataReceived {
 		Log.d("better", receivedData);
 		
 	}
+
+	@Override
+	public void accessPointCreated(boolean success, InetAddress address, int port, int number) {
+		
+		if(success)
+		{	
+			Log.d("better", String.valueOf(number));
+			
+			String username = MiddlewareUtil.username;
+			String password = MiddlewareUtil.password;
+			
+			MiddlewarePacket packet = new MiddlewarePacket();
+			byte [] header = {(byte)Constants.PERMANENT_AP_CREATED};
+			packet.setPacketData(header, (username+":"+password).getBytes());
+			
+			try
+			{
+				node.sendData(packet, InetAddress.getAllByName(MiddlewareUtil.getIPAddress().get(0))[0], Constants.TEMP_AP_PORT);
+				MiddlewareUtil.createWifiAccessPoint(getApplicationContext(), username, password);
+				
+				accessPoint = new AccessPoint(state, Constants.PERMANET_AP_PORT);
+				setAccessPointListener();
+				accessPoint.startReceiverThread();
+			}
+			catch(Exception e)
+			{
+				e.printStackTrace();
+			}
+
+		}
+		
+	}
+	
+	@Override
+	public void newAccessPointCreated(boolean success, String username, String password) {
+		
+		if(success)
+		{	
+			try
+			{
+				boolean status = false;
+				while(!status)
+				{
+					status = MiddlewareUtil.connectToNetwork(getApplicationContext(), username, password);
+				}
+				
+				Log.d("better", "joining.....");
+				Thread.sleep(5000);
+				
+				status = false;
+				while(!status)
+				{
+					status = join(node, state, Constants.PERMANET_AP_PORT);
+					Log.d("better", "joined!");
+				}
+				
+			}
+			catch(Exception e)
+			{
+				e.printStackTrace();
+			}
+		}
+		
+	}
+
+	@Override
+	public void nodeAdded(Node node) {
+		
+		Log.d("better", "Node Added!");
+		Log.d("better", node.getAddress().toString()+":"+node.getPort());
+	}
+
+	@Override
+	public void nodeRemoved(Node node) {
+		
+		Log.d("better", "Node Added!");
+		Log.d("better", node.getAddress().toString()+":"+node.getPort());
+	}
+
+
 
 }

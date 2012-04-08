@@ -1,5 +1,8 @@
 package com.multimedia.middleware;
 
+import java.net.InetAddress;
+import java.util.Random;
+
 import android.app.Activity;
 import android.os.Bundle;
 import android.util.Log;
@@ -8,13 +11,16 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 
 import com.middleware.listeners.AddressTable;
+import com.middleware.listeners.TempAPToNew;
 import com.middleware.model.AccessPoint;
+import com.middleware.model.Constants;
 import com.middleware.model.DataReceived;
+import com.middleware.model.MiddlewarePacket;
 import com.middleware.model.Node;
 import com.middleware.model.NodeState;
 import com.multimedia.middleware.util.MiddlewareUtil;
 
-public class AccessPointActivity extends Activity implements DataReceived, AddressTable{
+public class AccessPointActivity extends Activity implements DataReceived, AddressTable, TempAPToNew{
 
 	//UI Elements
 	Button btnCreateTemporaryAccessPoint;
@@ -23,13 +29,16 @@ public class AccessPointActivity extends Activity implements DataReceived, Addre
 	AccessPoint accessPoint;
 	NodeState state;
 	
+	//if a the access point is to be changed
+	Node newNode;
+	
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.access);
         
-		state = new NodeState("10", "1.2", "10");
+		state = new NodeState("10", "1.2", "5");
 		state.setStatus(true);
 		
         btnCreateTemporaryAccessPoint = (Button)this.findViewById(R.id.btnCreateTemporaryAccessPoint);
@@ -43,7 +52,7 @@ public class AccessPointActivity extends Activity implements DataReceived, Addre
 				try
 				{
 					MiddlewareUtil.createWifiAccessPoint(getApplicationContext(), "sirack", "betterconnect");
-					accessPoint = new AccessPoint(state, 4444);
+					accessPoint = new AccessPoint(state, Constants.TEMP_AP_PORT);
 					setListener();
 					accessPoint.startReceiverThread();
 				}
@@ -81,13 +90,33 @@ public class AccessPointActivity extends Activity implements DataReceived, Addre
     public void onResume()
     {
     	super.onResume();
+    }
+    
+    private boolean join(Node node, NodeState state, int port) throws Exception
+    {
+    	boolean status = false;
     	
+    	MiddlewarePacket packet = new MiddlewarePacket();
+		byte [] header = {(byte)Constants.CONNECTION_PROFILE};
+		String nodeProfile = state.toString();
+		packet.setPacketData(header, nodeProfile.getBytes());
+		InetAddress address = InetAddress.getAllByName(MiddlewareUtil.getIPAddress().get(0))[0];
+		node.sendData(packet, address, port);
+		status = true;
+    	
+    	return status;
     }
     
     public void setListener()
     {
     	accessPoint.setDataReceived(this);
     	accessPoint.setAddressTable(this);
+    	accessPoint.setTempApToNewAccessPoint(this);
+    }
+    
+    private void setNewNodeListener()
+    {
+    	newNode.setDataReceived(this);
     }
 
 	@Override
@@ -97,12 +126,98 @@ public class AccessPointActivity extends Activity implements DataReceived, Addre
 		Log.d("better", receivedString);
 		
 	}
+	
+	@Override
+	public void temporaryAccessPointConnectToNewAP(final boolean success, final String cred) {
+		
+		this.runOnUiThread(new Runnable() {
+			
+			@Override
+			public void run() {
+				
+				if(success)
+				{	
+					String credentials = cred;
+					String credInfo[] = credentials.split(":");
+					final String username = credInfo[0];
+					final String password = credInfo[1];
+					
+					new Thread(new Runnable() {
+						
+						@Override
+						public void run() {
+							try
+							{
+								boolean status = false;
+								while(!status)
+								{
+									boolean temp1 = MiddlewareUtil.disableAP(getApplicationContext(), "sirack", "betterconnect");
+									
+									Log.d("better", "Acccess Point Disabled!");
+									//time taken to disconnect from the network
+									Thread.sleep(100);
+									
+									boolean temp2 = MiddlewareUtil.connectToNetwork(getApplicationContext(), username, password);
+									
+									Log.d("better", "Connected to newly created network!");
+									
+									if(temp1 && temp2)
+									{
+										status = true;
+									}
+										
+								}
+								
+								//wait some time until node connects to a network
+								Thread.sleep(5000);
+							}
+							catch(Exception e)
+							{
+								e.printStackTrace();
+							}
+							
+							
+							boolean bin = false;
+							while(!bin)
+							{
+								try
+								{
+									Random randomPort = new Random();
+									
+									Log.d("better", "Changing from access point to client mode...");
+									
+									newNode = new Node(state, randomPort.nextInt(3000));
+									setNewNodeListener();
+									newNode.startReceiverThread();
+									
+									//start by sending profile information!
+									join(newNode, state, Constants.PERMANET_AP_PORT);
+									
+									Log.d("better", "joining the permanet access point...");
+									bin = true;
+								}
+								catch(Exception e)
+								{
+									e.printStackTrace();
+								}
+								
+							}//end while
+						}
+					}).start();
+					
+				}
+				
+			}
+		});
+		
+		
+	}
 
 	@Override
 	public void nodeAdded(Node node) {
 		
 		Log.d("better", "Node Added!");
-		Log.d("better", node.getAddress().toString());
+		Log.d("better", node.getAddress().toString()+":"+node.getPort());
 		
 	}
 
@@ -110,7 +225,7 @@ public class AccessPointActivity extends Activity implements DataReceived, Addre
 	public void nodeRemoved(Node node) {
 		
 		Log.d("better", "Node Removed!");
-		Log.d("better", node.getAddress().toString());
+		Log.d("better", node.getAddress().toString()+":"+node.getPort());
 		
 	}
 }

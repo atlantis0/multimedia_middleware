@@ -14,6 +14,9 @@ import android.util.Log;
 
 public class MiddlewareUtil {
 
+	public static final String username = "mine";
+	public static final String password = "mineminemine";
+	
 	public static ArrayList<String> getIPAddress()
 	{   
 		ArrayList<String> address_list = new ArrayList<String>();
@@ -127,7 +130,6 @@ public class MiddlewareUtil {
 	       
 	    }
 	
-	
 	public static boolean connectToNetwork(Context context, String username, String password)
 	{
    	 	boolean status;
@@ -156,4 +158,32 @@ public class MiddlewareUtil {
 		  return status;
 	 }
 	
+	 public static boolean disableAP(Context context, String ntId, String password) throws Exception
+	 {
+		 boolean apstatus = false;
+		 
+		 WifiManager wifiManager = (WifiManager)context.getSystemService(context.WIFI_SERVICE);
+		 
+		 Method[] wmMethods = wifiManager.getClass().getDeclaredMethods();   //Get all declared methods in WifiManager class     
+	        for(Method method: wmMethods){
+	            if(method.getName().equals("setWifiApEnabled")){
+	            
+	                WifiConfiguration netConfig = new WifiConfiguration();
+	                netConfig.SSID = ntId;
+	                netConfig.allowedAuthAlgorithms.set(WifiConfiguration.AuthAlgorithm.OPEN);
+	                netConfig.allowedProtocols.set(WifiConfiguration.Protocol.RSN);
+	                netConfig.allowedProtocols.set(WifiConfiguration.Protocol.WPA);
+	                netConfig.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.WPA_PSK);
+	                netConfig.preSharedKey = password;
+	                netConfig.allowedPairwiseCiphers.set(WifiConfiguration.PairwiseCipher.CCMP);
+	                netConfig.allowedPairwiseCiphers.set(WifiConfiguration.PairwiseCipher.TKIP);
+	                netConfig.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.CCMP);
+	                netConfig.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.TKIP);
+	            	
+	                apstatus=(Boolean)method.invoke(wifiManager, netConfig,false);    
+	            }
+	        }
+	        
+	     return apstatus;
+	 }
 }
