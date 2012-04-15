@@ -16,4 +16,18 @@
         android:text = "@string/choose_permanet"
         android:id = "@+id/btnChoosePermanet"
         />
+    
+    <EditText 
+        android:id = "@+id/txtAddress"
+        android:hint = "@string/hint"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        />
+    
+    <Button 
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text = "@string/hellopacket"
+        android:id = "@+id/btnHelloPacket"
+        />
 </LinearLayout>

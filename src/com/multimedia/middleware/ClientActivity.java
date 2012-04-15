@@ -38,7 +38,7 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
         super.onCreate(savedInstanceState);
         setContentView(R.layout.client);
         
-		state = new NodeState("10", "1.2", "10");
+		state = new NodeState("10", "1.2", "95");
 		state.setStatus(true);
 		
         btnSendConnectionProfile = (Button)this.findViewById(R.id.btnSendConnectionProfile);
@@ -64,11 +64,13 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 	    				join(node, state, Constants.TEMP_AP_PORT);
 	    				
 	    				success = true;
+	    				
+	    				Log.d("better", "Node Created!");
 					}
 					catch(Exception e)
 					{
 						e.printStackTrace();
-						Log.d("better", "Unable to create node!");
+						Log.d("better", "Retrying...");
 					}
 				}
 				
@@ -105,14 +107,6 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
     	accessPoint.setDataReceived(this);
     	accessPoint.setAddressTable(this);
     }
-
-	@Override
-	public void nodeReceivedData(byte[] data) {
-		
-		String receivedData = new String(data);
-		Log.d("better", receivedData);
-		
-	}
 
 	@Override
 	public void accessPointCreated(boolean success, InetAddress address, int port, int number) {
@@ -192,6 +186,13 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 		Log.d("better", node.getAddress().toString()+":"+node.getPort());
 	}
 
-
+	
+	@Override
+	public void nodeReceivedData(byte[] data) {
+		
+		String receivedData = new String(data);
+		Log.d("better", receivedData);
+		
+	}
 
 }

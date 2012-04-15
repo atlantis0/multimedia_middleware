@@ -9,6 +9,7 @@ import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.EditText;
 
 import com.middleware.listeners.AddressTable;
 import com.middleware.listeners.TempAPToNew;
@@ -25,6 +26,9 @@ public class AccessPointActivity extends Activity implements DataReceived, Addre
 	//UI Elements
 	Button btnCreateTemporaryAccessPoint;
 	Button btnChoosePermanet;
+	Button btnHelloPacket;
+	
+	EditText txtAddress;
 	
 	AccessPoint accessPoint;
 	NodeState state;
@@ -38,11 +42,14 @@ public class AccessPointActivity extends Activity implements DataReceived, Addre
         super.onCreate(savedInstanceState);
         setContentView(R.layout.access);
         
-		state = new NodeState("10", "1.2", "5");
+		state = new NodeState("10", "1.2", "90");
 		state.setStatus(true);
+		
+		txtAddress = (EditText)this.findViewById(R.id.txtAddress);
 		
         btnCreateTemporaryAccessPoint = (Button)this.findViewById(R.id.btnCreateTemporaryAccessPoint);
         btnChoosePermanet = (Button)this.findViewById(R.id.btnChoosePermanet);
+        btnHelloPacket = (Button)this.findViewById(R.id.btnHelloPacket);
         
         btnCreateTemporaryAccessPoint.setOnClickListener(new OnClickListener() {
 			
@@ -84,6 +91,30 @@ public class AccessPointActivity extends Activity implements DataReceived, Addre
 			}
 		});
         
+        btnHelloPacket.setOnClickListener(new OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				
+				String total[] = txtAddress.getText().toString().split(":");
+				
+				try
+				{
+					InetAddress address = InetAddress.getByName(total[0]);
+					MiddlewarePacket packet = new MiddlewarePacket();
+					byte [] header = {(byte)Constants.DATA};
+					packet.setPacketData(header, "some data".getBytes());
+					accessPoint.sendData(packet, address, new Integer(total[1]));
+				}
+				catch (Exception e) {
+					e.printStackTrace();
+				}
+				
+				
+			}
+		});
+        
+        
     }
     
     @Override
@@ -118,14 +149,6 @@ public class AccessPointActivity extends Activity implements DataReceived, Addre
     {
     	newNode.setDataReceived(this);
     }
-
-	@Override
-	public void nodeReceivedData(byte[] data) {
-		
-		String receivedString = new String(data);
-		Log.d("better", receivedString);
-		
-	}
 	
 	@Override
 	public void temporaryAccessPointConnectToNewAP(final boolean success, final String cred) {
@@ -228,4 +251,12 @@ public class AccessPointActivity extends Activity implements DataReceived, Addre
 		Log.d("better", node.getAddress().toString()+":"+node.getPort());
 		
 	}
+	
+	@Override
+	public void nodeReceivedData(byte[] data) {
+		
+		String receivedString = new String(data);
+		Log.d("better", receivedString);
+	}
+	
 }
