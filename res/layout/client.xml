@@ -9,4 +9,14 @@
         android:layout_height="wrap_content"
         android:text = "@string/connection_profile"
         android:id = "@+id/btnSendConnectionProfile"/>
+    
+    <Button 
+        android:id = "@+id/btnInfo"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"/>
+    
+    <TextView 
+        android:id="@+id/lblInfo"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content" />
 </LinearLayout>

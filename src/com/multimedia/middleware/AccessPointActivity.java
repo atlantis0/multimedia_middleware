@@ -35,6 +35,7 @@ public class AccessPointActivity extends Activity implements DataReceived, Addre
 	
 	//if a the access point is to be changed
 	Node newNode;
+	NodeState newNodeState;
 	
     /** Called when the activity is first created. */
     @Override
@@ -44,6 +45,9 @@ public class AccessPointActivity extends Activity implements DataReceived, Addre
         
 		state = new NodeState("10", "1.2", "90");
 		state.setStatus(true);
+		
+		newNodeState = new NodeState("10", "1.2", "45");
+		newNodeState.setStatus(true);
 		
 		txtAddress = (EditText)this.findViewById(R.id.txtAddress);
 		
@@ -79,7 +83,7 @@ public class AccessPointActivity extends Activity implements DataReceived, Addre
 				{
 					boolean change = accessPoint.choosePermanetAccessPoint();
 					if(change)
-						Log.d("better", "Access Point Changed!");
+						Log.d("better", "Access Point Changing!");
 					else
 						Log.d("better", "Access Point Remains");
 				}
@@ -102,9 +106,9 @@ public class AccessPointActivity extends Activity implements DataReceived, Addre
 				{
 					InetAddress address = InetAddress.getByName(total[0]);
 					MiddlewarePacket packet = new MiddlewarePacket();
-					byte [] header = {(byte)Constants.DATA};
+					byte [] header = {(byte)Constants.REQUEST_TABLE};
 					packet.setPacketData(header, "some data".getBytes());
-					accessPoint.sendData(packet, address, new Integer(total[1]));
+					newNode.sendData(packet, address, new Integer(total[1]));
 				}
 				catch (Exception e) {
 					e.printStackTrace();
@@ -171,52 +175,56 @@ public class AccessPointActivity extends Activity implements DataReceived, Addre
 						public void run() {
 							try
 							{
-								boolean status = false;
-								while(!status)
+								boolean temp1 = false;
+								while(!temp1)
 								{
-									boolean temp1 = MiddlewareUtil.disableAP(getApplicationContext(), "sirack", "betterconnect");
+									temp1 = MiddlewareUtil.disableAP(getApplicationContext(), "sirack", "betterconnect");
+									
+									temp1 = true;
 									
 									Log.d("better", "Acccess Point Disabled!");
-									//time taken to disconnect from the network
-									Thread.sleep(100);
+								}
+								
+								//time taken to disconnect from the network
+								Thread.sleep(1000);
 									
-									boolean temp2 = MiddlewareUtil.connectToNetwork(getApplicationContext(), username, password);
+								temp1 = false;
+								
+								while(!temp1)
+								{
+									temp1 = MiddlewareUtil.connectToNetwork(getApplicationContext(), username, password);
 									
 									Log.d("better", "Connected to newly created network!");
 									
-									if(temp1 && temp2)
-									{
-										status = true;
-									}
-										
+									temp1 = true;
 								}
 								
 								//wait some time until node connects to a network
-								Thread.sleep(5000);
+								Thread.sleep(8000);
 							}
 							catch(Exception e)
 							{
 								e.printStackTrace();
 							}
 							
+							Log.d("better", "Changing from access point to client mode...");
 							
 							boolean bin = false;
+							Random randomPort = new Random();
+							
 							while(!bin)
 							{
 								try
 								{
-									Random randomPort = new Random();
-									
-									Log.d("better", "Changing from access point to client mode...");
-									
-									newNode = new Node(state, randomPort.nextInt(3000));
+									newNode = new Node(newNodeState, 1000 + randomPort.nextInt(3000));
 									setNewNodeListener();
 									newNode.startReceiverThread();
 									
 									//start by sending profile information!
-									join(newNode, state, Constants.PERMANET_AP_PORT);
+									join(newNode, newNodeState, Constants.PERMANET_AP_PORT);
 									
 									Log.d("better", "joining the permanet access point...");
+									
 									bin = true;
 								}
 								catch(Exception e)

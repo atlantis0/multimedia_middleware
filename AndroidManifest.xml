@@ -17,7 +17,8 @@
         android:label="@string/app_name" >
         <activity
             android:name=".MiddlewareMultimediaActivity"
-            android:label="@string/app_name" >
+            android:label="@string/app_name" 
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -27,13 +28,15 @@
         
         <activity
             android:name=".AccessPointActivity"
-            android:label="@string/access_point" >
+            android:label="@string/access_point" 
+            android:screenOrientation="portrait">
         </activity>
         
         <activity 
             android:name=".ClientActivity"
             android:label="@string/client"
-            ></activity>
+            android:screenOrientation="portrait">
+        </activity>
         
     </application>
 

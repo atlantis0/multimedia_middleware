@@ -132,30 +132,38 @@ public class MiddlewareUtil {
 	
 	public static boolean connectToNetwork(Context context, String username, String password)
 	{
-   	 	boolean status;
-		 WifiManager wifi = (WifiManager)context.getSystemService(context.WIFI_SERVICE);
+   	 	boolean status = false;
+   	 	try
+   	 	{
+   	 		WifiManager wifi = (WifiManager)context.getSystemService(context.WIFI_SERVICE);
 		 
-		 if(!wifi.isWifiEnabled())
-		 {
-			 wifi.setWifiEnabled(true);
-		 }
+   	 		if(!wifi.isWifiEnabled())
+   	 		{
+   	 			wifi.setWifiEnabled(true);
+   	 			Thread.sleep(3000);
+   	 		}
 			
-		 WifiConfiguration netConfig = new WifiConfiguration();
-        netConfig.SSID = "\"" + username + "\"";
-        netConfig.allowedAuthAlgorithms.set(WifiConfiguration.AuthAlgorithm.OPEN);
-        netConfig.allowedProtocols.set(WifiConfiguration.Protocol.RSN);
-        netConfig.allowedProtocols.set(WifiConfiguration.Protocol.WPA);
-        netConfig.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.WPA_PSK);
-        netConfig.preSharedKey = "\"" + password + "\"";
-        netConfig.allowedPairwiseCiphers.set(WifiConfiguration.PairwiseCipher.CCMP);
-        netConfig.allowedPairwiseCiphers.set(WifiConfiguration.PairwiseCipher.TKIP);
-        netConfig.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.CCMP);
-        netConfig.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.TKIP);
-        
-		  int netId = wifi.addNetwork(netConfig);
-		  status  = wifi.enableNetwork(netId, true);
-		  
-		  return status;
+   	 		WifiConfiguration netConfig = new WifiConfiguration();
+   	 		netConfig.SSID = "\"" + username + "\"";
+   	 		netConfig.allowedAuthAlgorithms.set(WifiConfiguration.AuthAlgorithm.OPEN);
+   	 		netConfig.allowedProtocols.set(WifiConfiguration.Protocol.RSN);
+   	 		netConfig.allowedProtocols.set(WifiConfiguration.Protocol.WPA);
+   	 		netConfig.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.WPA_PSK);
+   	 		netConfig.preSharedKey = "\"" + password + "\"";
+   	 		netConfig.allowedPairwiseCiphers.set(WifiConfiguration.PairwiseCipher.CCMP);
+   	 		netConfig.allowedPairwiseCiphers.set(WifiConfiguration.PairwiseCipher.TKIP);
+   	 		netConfig.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.CCMP);
+   	 		netConfig.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.TKIP);
+       
+   	 		int netId = wifi.addNetwork(netConfig);
+   	 		status  = wifi.enableNetwork(netId, true);
+   	 	}
+   	 	catch (Exception e) {
+   	 		status = false;
+			e.printStackTrace();
+		}
+   	 	
+		return status;
 	 }
 	
 	 public static boolean disableAP(Context context, String ntId, String password) throws Exception
