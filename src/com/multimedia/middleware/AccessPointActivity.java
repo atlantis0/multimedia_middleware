@@ -45,9 +45,11 @@ public class AccessPointActivity extends Activity implements DataReceived, Addre
         
 		state = new NodeState("10", "1.2", "90");
 		state.setStatus(true);
+		state.setCanCreate(true);
 		
 		newNodeState = new NodeState("10", "1.2", "45");
 		newNodeState.setStatus(true);
+		newNodeState.setCanCreate(true);
 		
 		txtAddress = (EditText)this.findViewById(R.id.txtAddress);
 		

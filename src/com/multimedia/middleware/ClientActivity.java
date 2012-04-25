@@ -4,6 +4,11 @@ import java.net.InetAddress;
 import java.util.Random;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.os.BatteryManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -24,6 +29,11 @@ import com.multimedia.middleware.util.MiddlewareUtil;
 
 public class ClientActivity extends Activity implements DataReceived, CreatePermanetAccessPoint, NewAccessPoint, AddressTable {
 	
+    int scale = -1;
+    int level = -1;
+    int voltage = -1;
+    int temp = -1;
+    
 	Node node;
 	NodeState state;
 	
@@ -46,9 +56,11 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
         
 		state = new NodeState("10", "1.2", "96");
 		state.setStatus(true);
+		state.setCanCreate(true);
 		
 		newNodeState = new NodeState("10", "1.2", "77");
 		newNodeState.setStatus(true);
+		newNodeState.setCanCreate(true);
 		
 		lblInfo = (TextView)this.findViewById(R.id.lblInfo);
 		
@@ -86,7 +98,7 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 					}
 				}
 				
-				btnSendConnectionProfile.setEnabled(true);
+				//btnSendConnectionProfile.setEnabled(true);
 			}
 		});
         
@@ -96,11 +108,17 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 			@Override
 			public void onClick(View v) {
 				
-				lblInfo.setText(accessPoint.getRoutingTable().getRoutingTable().keySet().toString());
-				
+				try
+				{
+					lblInfo.setText(accessPoint.getRoutingTable().getRoutingTable().keySet().toString());
+				}
+				catch(Exception e)
+				{
+					e.printStackTrace();
+				}
+
 			}
 		});
-        
         
     }
     
@@ -219,6 +237,26 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 			}
 		}
 		
+	}
+	
+	private void registerForBatteryState()
+	{
+		BroadcastReceiver batteryReceiver = new BroadcastReceiver() {
+	        @Override
+	        public void onReceive(Context context, Intent intent) {
+	            level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+	            scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+	            temp = intent.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);
+	            voltage = intent.getIntExtra(BatteryManager.EXTRA_VOLTAGE, -1);
+	            
+	            state.setBatteryLife(new Integer(level).toString());
+	            
+	            Log.d("better", "level is "+level+"/"+scale+", temp is "+temp+", voltage is "+voltage);
+	        }
+	    };
+	    IntentFilter filter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+	    registerReceiver(batteryReceiver, filter);
+	    
 	}
 
 	@Override
