@@ -3,19 +3,6 @@
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:orientation="vertical" >
-
-    <Button 
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:text = "@string/create_ap"
-        android:id = "@+id/btnCreateTemporaryAccessPoint"/>
-    
-    <Button 
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:text = "@string/choose_permanet"
-        android:id = "@+id/btnChoosePermanet"
-        />
     
     <EditText 
         android:id = "@+id/txtAddress"

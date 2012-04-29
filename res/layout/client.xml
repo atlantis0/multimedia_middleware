@@ -20,4 +20,12 @@
         android:id="@+id/lblInfo"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content" />
+    
+    <Gallery
+    android:id="@+id/gallery"
+    android:paddingLeft="1dip"
+    android:layout_width="fill_parent"
+    android:layout_height="400dp"
+	/>
+	
 </LinearLayout>

@@ -1,6 +1,7 @@
 package com.multimedia.middleware;
 
 import java.net.InetAddress;
+import java.util.ArrayList;
 import java.util.Random;
 
 import android.app.Activity;
@@ -8,12 +9,20 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.res.TypedArray;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.BatteryManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.view.View.OnClickListener;
+import android.widget.BaseAdapter;
 import android.widget.Button;
+import android.widget.Gallery;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.middleware.listeners.AddressTable;
@@ -34,11 +43,12 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
     int voltage = -1;
     int temp = -1;
     
+    boolean isAccessPoint = false;
+    
+    ArrayList<Bitmap> app_screenshots = null;
+    
 	Node node;
 	NodeState state;
-	
-	Node newNode;
-	NodeState newNodeState;
 	
 	//if this node is chosen to become permanent access point
 	AccessPoint accessPoint;
@@ -47,6 +57,7 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 	Button btnSendConnectionProfile;
 	Button btnInfo;
 	TextView lblInfo;
+	Gallery g;
 	
     /** Called when the activity is first created. */
     @Override
@@ -58,10 +69,22 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 		state.setStatus(true);
 		state.setCanCreate(true);
 		
-		newNodeState = new NodeState("10", "1.2", "77");
-		newNodeState.setStatus(true);
-		newNodeState.setCanCreate(true);
+		g = (Gallery)this.findViewById(R.id.gallery);
+		app_screenshots = new ArrayList<Bitmap>();
 		
+		
+		app_screenshots.add(BitmapFactory.decodeResource(getResources(), R.drawable.one));
+		app_screenshots.add(BitmapFactory.decodeResource(getResources(), R.drawable.two));
+		app_screenshots.add(BitmapFactory.decodeResource(getResources(), R.drawable.three));
+		app_screenshots.add(BitmapFactory.decodeResource(getResources(), R.drawable.four));
+		app_screenshots.add(BitmapFactory.decodeResource(getResources(), R.drawable.five));
+		app_screenshots.add(BitmapFactory.decodeResource(getResources(), R.drawable.six));
+		app_screenshots.add(BitmapFactory.decodeResource(getResources(), R.drawable.seven));
+		app_screenshots.add(BitmapFactory.decodeResource(getResources(), R.drawable.eight));
+		app_screenshots.add(BitmapFactory.decodeResource(getResources(), R.drawable.nine));
+		
+		g.setAdapter(new ImageAdapter(this));
+		 
 		lblInfo = (TextView)this.findViewById(R.id.lblInfo);
 		
 		btnInfo = (Button)this.findViewById(R.id.btnInfo);
@@ -122,6 +145,49 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
         
     }
     
+    public class ImageAdapter extends BaseAdapter {
+	    int mGalleryItemBackground;
+	    private Context mContext;
+
+	    public ImageAdapter(Context c) {
+	        mContext = c;
+	        TypedArray a = obtainStyledAttributes(R.styleable.HelloGallery);
+	        mGalleryItemBackground = a.getResourceId(
+	                R.styleable.HelloGallery_android_galleryItemBackground, 0);
+	        a.recycle();
+	    }
+
+	    public int getCount() {
+	        return app_screenshots.size();
+	    }
+
+	    public Object getItem(int position) {
+	        return position;
+	    }
+
+	    public long getItemId(int position) {
+	        return position;
+	    }
+
+	    public View getView(int position, View convertView, ViewGroup parent) {
+	    	
+	    	ImageView i = new ImageView(mContext);
+	    	try
+	    	{
+		        i.setImageBitmap(app_screenshots.get(position));
+		        i.setLayoutParams( new Gallery.LayoutParams(WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.WRAP_CONTENT));
+		        i.setScaleType(ImageView.ScaleType.FIT_XY);
+		        i.setBackgroundResource(mGalleryItemBackground);
+	    	}
+	    	catch(Exception e)
+	    	{
+	    		e.printStackTrace();
+	    	}
+
+	        return i;
+	    }
+	}
+    
     private boolean join(Node node, NodeState state, int port) throws Exception
     {
     	boolean status = false;
@@ -142,11 +208,6 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
     	node.setDataReceived(this);
     	node.setCreatePermanetAccessPoint(this);
     	node.setNewAccessPointCreated(this);
-    }
-    
-    private void setNewNodeListener()
-    {
-    	newNode.setDataReceived(this);
     }
     
     private void setAccessPointListener()
@@ -177,6 +238,8 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 				accessPoint = new AccessPoint(state, Constants.PERMANET_AP_PORT);
 				setAccessPointListener();
 				accessPoint.startReceiverThread();
+				
+				isAccessPoint = true;
 			}
 			catch(Exception e)
 			{
@@ -210,12 +273,18 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 				{
 					try
 					{
-	    				newNode = new Node(newNodeState, randomPort.nextInt(3000));
-	    				setNewNodeListener();
-	    				newNode.startReceiverThread();
+						//stop the previous node
+						node.stop();
+						node = null;
+						
+						node = new Node(state, randomPort.nextInt(3000));
+						setListener();
+	    				node.startReceiverThread();
 	    				
 	    				//start by sending profile information!
-	    				join(newNode, newNodeState, Constants.PERMANET_AP_PORT);
+	    				join(node, state, Constants.PERMANET_AP_PORT);
+	    				
+	    				isAccessPoint = false;
 	    				
 	    				status = true;
 	    				

@@ -6,6 +6,9 @@ import java.util.Random;
 import android.app.Activity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
@@ -23,9 +26,9 @@ import com.multimedia.middleware.util.MiddlewareUtil;
 
 public class AccessPointActivity extends Activity implements DataReceived, AddressTable, TempAPToNew{
 
+	boolean isAccessPoint = true;
+	
 	//UI Elements
-	Button btnCreateTemporaryAccessPoint;
-	Button btnChoosePermanet;
 	Button btnHelloPacket;
 	
 	EditText txtAddress;
@@ -35,7 +38,6 @@ public class AccessPointActivity extends Activity implements DataReceived, Addre
 	
 	//if a the access point is to be changed
 	Node newNode;
-	NodeState newNodeState;
 	
     /** Called when the activity is first created. */
     @Override
@@ -47,56 +49,10 @@ public class AccessPointActivity extends Activity implements DataReceived, Addre
 		state.setStatus(true);
 		state.setCanCreate(true);
 		
-		newNodeState = new NodeState("10", "1.2", "45");
-		newNodeState.setStatus(true);
-		newNodeState.setCanCreate(true);
-		
 		txtAddress = (EditText)this.findViewById(R.id.txtAddress);
-		
-        btnCreateTemporaryAccessPoint = (Button)this.findViewById(R.id.btnCreateTemporaryAccessPoint);
-        btnChoosePermanet = (Button)this.findViewById(R.id.btnChoosePermanet);
+
         btnHelloPacket = (Button)this.findViewById(R.id.btnHelloPacket);
-        
-        btnCreateTemporaryAccessPoint.setOnClickListener(new OnClickListener() {
-			
-			@Override
-			public void onClick(View v) {
-				
-				try
-				{
-					MiddlewareUtil.createWifiAccessPoint(getApplicationContext(), "sirack", "betterconnect");
-					accessPoint = new AccessPoint(state, Constants.TEMP_AP_PORT);
-					setListener();
-					accessPoint.startReceiverThread();
-				}
-				catch(Exception e)
-				{
-					Log.d("better", "Access Point is not created!");
-					e.printStackTrace();
-				}
-			}
-		});
-        
-        btnChoosePermanet.setOnClickListener(new OnClickListener() {
-			
-			@Override
-			public void onClick(View v) {
-				try
-				{
-					boolean change = accessPoint.choosePermanetAccessPoint();
-					if(change)
-						Log.d("better", "Access Point Changing!");
-					else
-						Log.d("better", "Access Point Remains");
-				}
-				catch(Exception e)
-				{
-					e.printStackTrace();
-					Log.d("better", "Unable to choose permanet access point");
-				}
-			}
-		});
-        
+                
         btnHelloPacket.setOnClickListener(new OnClickListener() {
 			
 			@Override
@@ -123,11 +79,69 @@ public class AccessPointActivity extends Activity implements DataReceived, Addre
         
     }
     
+    private void createTemporaryAcessPoint()
+    {
+    	try
+		{
+			MiddlewareUtil.createWifiAccessPoint(getApplicationContext(), "sirack", "betterconnect");
+			accessPoint = new AccessPoint(state, Constants.TEMP_AP_PORT);
+			setListener();
+			accessPoint.startReceiverThread();
+		}
+		catch(Exception e)
+		{
+			Log.d("better", "Access Point is not created!");
+			e.printStackTrace();
+		}
+    }
+    
+    private void choosePermanetAccessPoint()
+    {
+    	try
+		{
+			boolean change = accessPoint.choosePermanetAccessPoint();
+			if(change)
+				Log.d("better", "Access Point Changing!");
+			else
+				Log.d("better", "Access Point Remains");
+		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+			Log.d("better", "Unable to choose permanet access point");
+		}
+    }
+    
     @Override
     public void onResume()
     {
     	super.onResume();
     }
+    
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.setup, menu);
+        return true;
+    }
+    
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+    	
+    	if(item.getItemId() == R.id.menucreateap)
+    	{
+    		createTemporaryAcessPoint();
+    		return true;
+    	}
+    	if(item.getItemId() == R.id.menuchoose)
+    	{
+    		choosePermanetAccessPoint();
+    		return true;
+    	}
+        
+        return super.onOptionsItemSelected(item);
+    }
+    
     
     private boolean join(Node node, NodeState state, int port) throws Exception
     {
@@ -218,12 +232,14 @@ public class AccessPointActivity extends Activity implements DataReceived, Addre
 							{
 								try
 								{
-									newNode = new Node(newNodeState, 1000 + randomPort.nextInt(3000));
+									newNode = new Node(state, 1000 + randomPort.nextInt(3000));
 									setNewNodeListener();
 									newNode.startReceiverThread();
 									
 									//start by sending profile information!
-									join(newNode, newNodeState, Constants.PERMANET_AP_PORT);
+									join(newNode, state, Constants.PERMANET_AP_PORT);
+									
+									isAccessPoint = false;
 									
 									Log.d("better", "joining the permanet access point...");
 									
