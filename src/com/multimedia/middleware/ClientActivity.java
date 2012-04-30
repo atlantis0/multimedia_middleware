@@ -19,11 +19,14 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.view.View.OnClickListener;
+import android.widget.AdapterView.OnItemClickListener;
+import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.Gallery;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.middleware.listeners.AddressTable;
 import com.middleware.listeners.CreatePermanetAccessPoint;
@@ -43,9 +46,19 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
     int voltage = -1;
     int temp = -1;
     
-    boolean isAccessPoint = false;
+    Integer slides [] = {
+			R.drawable.one,
+			R.drawable.two,
+			R.drawable.three,
+			R.drawable.four,
+			R.drawable.five,
+			R.drawable.six,
+			R.drawable.seven,
+			R.drawable.eight,
+			R.drawable.nine
+	};
     
-    ArrayList<Bitmap> app_screenshots = null;
+    boolean isAccessPoint = false;
     
 	Node node;
 	NodeState state;
@@ -58,6 +71,8 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 	Button btnInfo;
 	TextView lblInfo;
 	Gallery g;
+	ImageView imgPresenter;
+	
 	
     /** Called when the activity is first created. */
     @Override
@@ -70,26 +85,27 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 		state.setCanCreate(true);
 		
 		g = (Gallery)this.findViewById(R.id.gallery);
-		app_screenshots = new ArrayList<Bitmap>();
-		
-		
-		app_screenshots.add(BitmapFactory.decodeResource(getResources(), R.drawable.one));
-		app_screenshots.add(BitmapFactory.decodeResource(getResources(), R.drawable.two));
-		app_screenshots.add(BitmapFactory.decodeResource(getResources(), R.drawable.three));
-		app_screenshots.add(BitmapFactory.decodeResource(getResources(), R.drawable.four));
-		app_screenshots.add(BitmapFactory.decodeResource(getResources(), R.drawable.five));
-		app_screenshots.add(BitmapFactory.decodeResource(getResources(), R.drawable.six));
-		app_screenshots.add(BitmapFactory.decodeResource(getResources(), R.drawable.seven));
-		app_screenshots.add(BitmapFactory.decodeResource(getResources(), R.drawable.eight));
-		app_screenshots.add(BitmapFactory.decodeResource(getResources(), R.drawable.nine));
-		
 		g.setAdapter(new ImageAdapter(this));
-		 
+		
+		imgPresenter = (ImageView)this.findViewById(R.id.imgPresenter);
+		
 		lblInfo = (TextView)this.findViewById(R.id.lblInfo);
 		
 		btnInfo = (Button)this.findViewById(R.id.btnInfo);
         btnSendConnectionProfile = (Button)this.findViewById(R.id.btnSendConnectionProfile);
 
+        g.setOnItemClickListener(new OnItemClickListener() {
+        	
+        	@Override
+			public void onItemClick(AdapterView<?> arg0, View arg1, int arg2, long arg3)
+        	{
+        		Toast.makeText(getBaseContext(), 
+						"You have selected picture " + (arg2+1) + " of Antartica", 
+						Toast.LENGTH_SHORT).show();
+        		imgPresenter.setImageResource(slides[arg2]);
+        	}
+		});
+        
         btnSendConnectionProfile.setOnClickListener(new OnClickListener() {
         	
 			@Override
@@ -158,7 +174,7 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 	    }
 
 	    public int getCount() {
-	        return app_screenshots.size();
+	        return slides.length;
 	    }
 
 	    public Object getItem(int position) {
@@ -171,20 +187,13 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 
 	    public View getView(int position, View convertView, ViewGroup parent) {
 	    	
-	    	ImageView i = new ImageView(mContext);
-	    	try
-	    	{
-		        i.setImageBitmap(app_screenshots.get(position));
-		        i.setLayoutParams( new Gallery.LayoutParams(WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.WRAP_CONTENT));
-		        i.setScaleType(ImageView.ScaleType.FIT_XY);
-		        i.setBackgroundResource(mGalleryItemBackground);
-	    	}
-	    	catch(Exception e)
-	    	{
-	    		e.printStackTrace();
-	    	}
-
-	        return i;
+	    	ImageView iv = new ImageView(getApplicationContext());
+	        iv.setImageResource(slides[position]);
+	        iv.setScaleType(ImageView.ScaleType.FIT_XY);
+	        iv.setLayoutParams(new Gallery.LayoutParams(150,120));
+	        iv.setBackgroundResource(mGalleryItemBackground);
+	        
+	        return iv;
 	    }
 	}
     
