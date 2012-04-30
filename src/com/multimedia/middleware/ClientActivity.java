@@ -1,7 +1,6 @@
 package com.multimedia.middleware;
 
 import java.net.InetAddress;
-import java.util.ArrayList;
 import java.util.Random;
 
 import android.app.Activity;
@@ -16,12 +15,8 @@ import android.os.BatteryManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.view.ViewGroup;
-import android.view.WindowManager;
 import android.view.View.OnClickListener;
-import android.widget.BaseAdapter;
 import android.widget.Button;
-import android.widget.Gallery;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -45,8 +40,6 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
     
     boolean isAccessPoint = false;
     
-    ArrayList<Bitmap> app_screenshots = null;
-    
 	Node node;
 	NodeState state;
 	
@@ -57,7 +50,6 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 	Button btnSendConnectionProfile;
 	Button btnInfo;
 	TextView lblInfo;
-	Gallery g;
 	
     /** Called when the activity is first created. */
     @Override
@@ -69,22 +61,6 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 		state.setStatus(true);
 		state.setCanCreate(true);
 		
-		g = (Gallery)this.findViewById(R.id.gallery);
-		app_screenshots = new ArrayList<Bitmap>();
-		
-		
-		app_screenshots.add(BitmapFactory.decodeResource(getResources(), R.drawable.one));
-		app_screenshots.add(BitmapFactory.decodeResource(getResources(), R.drawable.two));
-		app_screenshots.add(BitmapFactory.decodeResource(getResources(), R.drawable.three));
-		app_screenshots.add(BitmapFactory.decodeResource(getResources(), R.drawable.four));
-		app_screenshots.add(BitmapFactory.decodeResource(getResources(), R.drawable.five));
-		app_screenshots.add(BitmapFactory.decodeResource(getResources(), R.drawable.six));
-		app_screenshots.add(BitmapFactory.decodeResource(getResources(), R.drawable.seven));
-		app_screenshots.add(BitmapFactory.decodeResource(getResources(), R.drawable.eight));
-		app_screenshots.add(BitmapFactory.decodeResource(getResources(), R.drawable.nine));
-		
-		g.setAdapter(new ImageAdapter(this));
-		 
 		lblInfo = (TextView)this.findViewById(R.id.lblInfo);
 		
 		btnInfo = (Button)this.findViewById(R.id.btnInfo);
@@ -144,49 +120,6 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 		});
         
     }
-    
-    public class ImageAdapter extends BaseAdapter {
-	    int mGalleryItemBackground;
-	    private Context mContext;
-
-	    public ImageAdapter(Context c) {
-	        mContext = c;
-	        TypedArray a = obtainStyledAttributes(R.styleable.HelloGallery);
-	        mGalleryItemBackground = a.getResourceId(
-	                R.styleable.HelloGallery_android_galleryItemBackground, 0);
-	        a.recycle();
-	    }
-
-	    public int getCount() {
-	        return app_screenshots.size();
-	    }
-
-	    public Object getItem(int position) {
-	        return position;
-	    }
-
-	    public long getItemId(int position) {
-	        return position;
-	    }
-
-	    public View getView(int position, View convertView, ViewGroup parent) {
-	    	
-	    	ImageView i = new ImageView(mContext);
-	    	try
-	    	{
-		        i.setImageBitmap(app_screenshots.get(position));
-		        i.setLayoutParams( new Gallery.LayoutParams(WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.WRAP_CONTENT));
-		        i.setScaleType(ImageView.ScaleType.FIT_XY);
-		        i.setBackgroundResource(mGalleryItemBackground);
-	    	}
-	    	catch(Exception e)
-	    	{
-	    		e.printStackTrace();
-	    	}
-
-	        return i;
-	    }
-	}
     
     private boolean join(Node node, NodeState state, int port) throws Exception
     {

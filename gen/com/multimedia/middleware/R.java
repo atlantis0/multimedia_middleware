@@ -28,7 +28,7 @@ public final class R {
         public static final int btnHelloPacket=0x7f060001;
         public static final int btnInfo=0x7f060003;
         public static final int btnSendConnectionProfile=0x7f060002;
-        public static final int gallery=0x7f060005;
+        public static final int imgSlide=0x7f060005;
         public static final int lblInfo=0x7f060004;
         public static final int menuchoose=0x7f060009;
         public static final int menucreateap=0x7f060008;
@@ -55,6 +55,7 @@ public final class R {
         public static final int hellopacket=0x7f040004;
         public static final int hint=0x7f040005;
         public static final int info=0x7f040006;
+        public static final int slide=0x7f04000c;
     }
     public static final class styleable {
         /** Attributes that can be used with a HelloGallery.

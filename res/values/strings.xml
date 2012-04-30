@@ -16,5 +16,7 @@
     <string name="create_ap">Create AP</string>
     <string name="connection_profile">Send Connection Profile</string>
     <string name="choose_permanet">Choose Permanet Access Point</string>
+    
+    <string name="slide">Slide</string>
 
 </resources>
