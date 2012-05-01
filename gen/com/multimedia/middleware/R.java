@@ -23,16 +23,17 @@ public final class R {
         public static final int two=0x7f020009;
     }
     public static final class id {
-        public static final int btnAccessPointMode=0x7f060007;
-        public static final int btnClientMode=0x7f060008;
+        public static final int btnAccessPointMode=0x7f060008;
+        public static final int btnClientMode=0x7f060009;
         public static final int btnHelloPacket=0x7f060001;
-        public static final int btnInfo=0x7f060003;
-        public static final int btnSendConnectionProfile=0x7f060002;
-        public static final int gallery=0x7f060005;
-        public static final int imgPresenter=0x7f060006;
-        public static final int lblInfo=0x7f060004;
-        public static final int menuchoose=0x7f06000a;
-        public static final int menucreateap=0x7f060009;
+        public static final int btnInfo=0x7f060004;
+        public static final int btnSendConnectionProfile=0x7f060003;
+        public static final int gallery=0x7f060006;
+        public static final int imgPresenter=0x7f060007;
+        public static final int imgSlide=0x7f060002;
+        public static final int lblInfo=0x7f060005;
+        public static final int menuchoose=0x7f06000b;
+        public static final int menucreateap=0x7f06000a;
         public static final int txtAddress=0x7f060000;
     }
     public static final class layout {

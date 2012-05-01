@@ -49,15 +49,15 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
     int temp = -1;
     
     Integer slides [] = {
-			R.drawable.one,
-			R.drawable.two,
-			R.drawable.three,
-			R.drawable.four,
-			R.drawable.five,
-			R.drawable.six,
-			R.drawable.seven,
-			R.drawable.eight,
-			R.drawable.nine
+    		android.R.drawable.btn_plus,
+    		android.R.drawable.btn_minus,
+    		android.R.drawable.btn_radio,
+    		android.R.drawable.btn_star,
+    		android.R.drawable.ic_btn_speak_now,
+    		android.R.drawable.ic_dialog_email,
+    		android.R.drawable.ic_dialog_info,
+    		android.R.drawable.ic_dialog_map,
+    		android.R.drawable.ic_dialog_dialer
 	};
     
     boolean isAccessPoint = false;
@@ -104,7 +104,7 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
         	@Override
 			public void onItemClick(AdapterView<?> arg0, View arg1, int arg2, long arg3)
         	{
-        		Bitmap bm = BitmapFactory.decodeResource(getResources(), slides[arg2]);
+        		Bitmap bm = BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher);
 				ByteArrayOutputStream baos = new ByteArrayOutputStream();  
 				bm.compress(Bitmap.CompressFormat.PNG, 100, baos);  
 				byte[] imageBytes = baos.toByteArray();
@@ -112,11 +112,20 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
         		MiddlewarePacket packet = new MiddlewarePacket();
         		byte [] header = {(byte)Constants.DATA};
         		packet.setPacketData(header, imageBytes);
-
-        		broadCastData(node, neighbours, packet);
+        		
+        		if(!isAccessPoint)
+        		{
+            		broadCastData(node, neighbours, packet);
+        		}
+        		else
+        		{
+        			broadCastData(accessPoint, neighbours, packet);
+        		}
         		
         		Toast.makeText(getApplicationContext(), "Selected", Toast.LENGTH_SHORT).show();
         		imgPresenter.setImageResource(slides[arg2]);
+        		
+        		
         	}
 		});
         
@@ -163,7 +172,15 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 				
 				try
 				{
-					requestTable(node, Constants.PERMANET_AP_PORT);
+					if(!isAccessPoint)
+					{
+						requestTable(node, Constants.PERMANET_AP_PORT);
+					}
+					else
+					{
+						neighbours = accessPoint.getRoutingTable().getRoutingTable().keySet();
+					}
+					
 				}
 				catch(Exception e)
 				{
@@ -293,7 +310,22 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 		
 		else if(receivedHeader.equals(String.valueOf(Constants.DATA)))
 		{
-			//
+			try
+			{
+				final Bitmap bmp=BitmapFactory.decodeByteArray(body,0,body.length);
+				
+				imgPresenter.post(new Runnable() {
+					
+					@Override
+					public void run() {
+						imgPresenter.setImageBitmap(bmp);
+					}
+				});
+			}
+			catch (Exception e) {
+				e.printStackTrace();
+			}
+			
 		}
 		
 		else

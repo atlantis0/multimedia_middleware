@@ -6,6 +6,8 @@ import java.util.Random;
 import java.util.Set;
 
 import android.app.Activity;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -15,6 +17,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 
 import com.middleware.listeners.AddressTable;
 import com.middleware.listeners.TempAPToNew;
@@ -32,8 +35,8 @@ public class AccessPointActivity extends Activity implements DataReceived, Addre
 	
 	//UI Elements
 	Button btnHelloPacket;
-	
 	EditText txtAddress;
+	ImageView imgSlide;
 	
 	AccessPoint accessPoint;
 	NodeState state;
@@ -55,6 +58,7 @@ public class AccessPointActivity extends Activity implements DataReceived, Addre
 		
 		neighbours = new HashSet<String>();
 		
+		imgSlide = (ImageView)this.findViewById(R.id.imgSlide);
 		txtAddress = (EditText)this.findViewById(R.id.txtAddress);
 
         btnHelloPacket = (Button)this.findViewById(R.id.btnHelloPacket);
@@ -315,6 +319,30 @@ public class AccessPointActivity extends Activity implements DataReceived, Addre
 			}
 			
 			Log.d("better", "neighbours -->" + neighbours.toString());
+		}
+		
+		else if(receivedHeader.equals(String.valueOf(Constants.DATA)))
+		{
+			try
+			{
+				final Bitmap bmp=BitmapFactory.decodeByteArray(body,0,body.length);
+				
+				imgSlide.post(new Runnable() {
+					
+					@Override
+					public void run() {
+						imgSlide.setImageBitmap(bmp);
+					}
+				});
+			}
+			catch (Exception e) {
+				e.printStackTrace();
+			}
+			
+		}
+		else
+		{
+			
 		}
 	}
 	
