@@ -138,6 +138,50 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
     	return status;
     }
     
+    
+    @Override
+	public void nodeAdded(Node node) {
+		
+		Log.d("better", "Node Added!");
+		Log.d("better", node.getAddress().toString()+":"+node.getPort());
+	}
+
+	@Override
+	public void nodeRemoved(Node node) {
+		
+		Log.d("better", "Node Added!");
+		Log.d("better", node.getAddress().toString()+":"+node.getPort());
+	}
+
+	
+	@Override
+	public void nodeReceivedData(byte[] data) {
+		
+		String receivedData = new String(data);
+		Log.d("better", receivedData);
+		
+		final byte[] header = new byte[1];
+		header[0] = data[0];
+		final byte body[] = new byte[data.length-1];
+		
+		for(int i=0; i<data.length-1; i++)
+		{
+			body[i] = data[i+1];
+		}
+		
+        String receivedHeader = new String(header);
+        
+		if(receivedHeader.equals(String.valueOf(Constants.DATA)))
+		{
+			final Bitmap bmp = BitmapFactory.decodeByteArray(body,0,body.length);
+			imgSlide.setImageBitmap(bmp);
+		}
+		else
+		{
+			
+		}
+	}
+	
     private void setListener()
     {
     	node.setDataReceived(this);
@@ -270,27 +314,6 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 	    
 	}
 
-	@Override
-	public void nodeAdded(Node node) {
-		
-		Log.d("better", "Node Added!");
-		Log.d("better", node.getAddress().toString()+":"+node.getPort());
-	}
-
-	@Override
-	public void nodeRemoved(Node node) {
-		
-		Log.d("better", "Node Added!");
-		Log.d("better", node.getAddress().toString()+":"+node.getPort());
-	}
-
 	
-	@Override
-	public void nodeReceivedData(byte[] data) {
-		
-		String receivedData = new String(data);
-		Log.d("better", receivedData);
-		
-	}
 
 }
