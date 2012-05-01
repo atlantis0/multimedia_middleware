@@ -286,7 +286,7 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 			}
 			
 			//finally add the access point itself
-			neighbours.add(MiddlewareUtil.getIPAddress().get(0) + ":" + Constants.PERMANENT_AP_CREATED);
+			neighbours.add(MiddlewareUtil.getIPAddress().get(0) + ":" + Constants.PERMANET_AP_PORT);
 			
 			Log.d("better", "TABLE_DATA --> neighbours" + neighbours.toString());
 		}
