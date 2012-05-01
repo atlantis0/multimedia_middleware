@@ -1,8 +1,11 @@
 package com.multimedia.middleware;
 
+import java.io.ByteArrayOutputStream;
 import java.net.InetAddress;
-import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Random;
+import java.util.Set;
 
 import android.app.Activity;
 import android.content.BroadcastReceiver;
@@ -17,7 +20,6 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.WindowManager;
 import android.view.View.OnClickListener;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView;
@@ -63,6 +65,8 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 	Node node;
 	NodeState state;
 	
+    Set<String> neighbours = null;
+	
 	//if this node is chosen to become permanent access point
 	AccessPoint accessPoint;
 	
@@ -73,7 +77,6 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 	Gallery g;
 	ImageView imgPresenter;
 	
-	
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -83,6 +86,8 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 		state = new NodeState("10", "1.2", "96");
 		state.setStatus(true);
 		state.setCanCreate(true);
+		
+		neighbours = new HashSet<String>();
 		
 		g = (Gallery)this.findViewById(R.id.gallery);
 		g.setAdapter(new ImageAdapter(this));
@@ -99,9 +104,18 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
         	@Override
 			public void onItemClick(AdapterView<?> arg0, View arg1, int arg2, long arg3)
         	{
-        		Toast.makeText(getBaseContext(), 
-						"You have selected picture " + (arg2+1) + " of Antartica", 
-						Toast.LENGTH_SHORT).show();
+        		Bitmap bm = BitmapFactory.decodeResource(getResources(), slides[arg2]);
+				ByteArrayOutputStream baos = new ByteArrayOutputStream();  
+				bm.compress(Bitmap.CompressFormat.PNG, 100, baos);  
+				byte[] imageBytes = baos.toByteArray();
+				
+        		MiddlewarePacket packet = new MiddlewarePacket();
+        		byte [] header = {(byte)Constants.DATA};
+        		packet.setPacketData(header, imageBytes);
+
+        		broadCastData(node, neighbours, packet);
+        		
+        		Toast.makeText(getApplicationContext(), "Selected", Toast.LENGTH_SHORT).show();
         		imgPresenter.setImageResource(slides[arg2]);
         	}
 		});
@@ -149,7 +163,7 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 				
 				try
 				{
-					lblInfo.setText(accessPoint.getRoutingTable().getRoutingTable().keySet().toString());
+					requestTable(node, Constants.PERMANET_AP_PORT);
 				}
 				catch(Exception e)
 				{
@@ -161,41 +175,6 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
         
     }
     
-    public class ImageAdapter extends BaseAdapter {
-	    int mGalleryItemBackground;
-	    private Context mContext;
-
-	    public ImageAdapter(Context c) {
-	        mContext = c;
-	        TypedArray a = obtainStyledAttributes(R.styleable.HelloGallery);
-	        mGalleryItemBackground = a.getResourceId(
-	                R.styleable.HelloGallery_android_galleryItemBackground, 0);
-	        a.recycle();
-	    }
-
-	    public int getCount() {
-	        return slides.length;
-	    }
-
-	    public Object getItem(int position) {
-	        return position;
-	    }
-
-	    public long getItemId(int position) {
-	        return position;
-	    }
-
-	    public View getView(int position, View convertView, ViewGroup parent) {
-	    	
-	    	ImageView iv = new ImageView(getApplicationContext());
-	        iv.setImageResource(slides[position]);
-	        iv.setScaleType(ImageView.ScaleType.FIT_XY);
-	        iv.setLayoutParams(new Gallery.LayoutParams(150,120));
-	        iv.setBackgroundResource(mGalleryItemBackground);
-	        
-	        return iv;
-	    }
-	}
     
     private boolean join(Node node, NodeState state, int port) throws Exception
     {
@@ -212,6 +191,118 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
     	return status;
     }
     
+    private boolean requestTable(Node node, int atPort) throws Exception
+    {
+    	boolean status = false;
+    	
+    	//request table 
+		MiddlewarePacket packet = new MiddlewarePacket();
+		byte [] header = {(byte)Constants.REQUEST_TABLE};
+		String data = "data";
+		packet.setPacketData(header, data.getBytes());
+		InetAddress address = InetAddress.getAllByName(MiddlewareUtil.getIPAddress().get(0))[0];
+		node.sendData(packet, address, atPort);
+		
+		status = true;
+    	
+    	return status;
+    }
+
+	
+	private void broadCastData(Node node, Set<String> nodes, MiddlewarePacket packet)
+	{
+		Iterator<String> iter = nodes.iterator();
+		
+		String address[] = null;
+		InetAddress nodeAddress = null;
+		
+		while(iter.hasNext())
+		{
+			try
+			{
+				address = iter.next().split(":");
+				nodeAddress = InetAddress.getByName(address[0]);
+				node.sendData(packet, nodeAddress, new Integer(address[1]));
+			}
+			catch(Exception e)
+			{
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	@Override
+	public void nodeReceivedData(final byte[] data) {
+		
+		String receivedData = new String(data);
+		Log.d("better", receivedData);
+		
+		final byte[] header = new byte[1];
+		header[0] = data[0];
+		final byte body[] = new byte[data.length-1];
+		
+		for(int i=0; i<data.length-1; i++)
+		{
+			body[i] = data[i+1];
+		}
+		
+        String receivedHeader = new String(header);
+        
+		if(receivedHeader.equals(String.valueOf(Constants.NEW_NODE)))
+		{
+			final String receivedBody = new String(body);
+			String [] nodes = receivedBody.split(",");
+			
+			for(int i=0; i<nodes.length; i++)
+			{
+				if(nodes[i].length() > 1)
+				{
+					neighbours.add(nodes[i]);
+				}
+			}
+			
+			Log.d("better", "neighbours -->" + neighbours.toString());
+		}
+		
+		else if(receivedHeader.equals(String.valueOf(Constants.DISCONNECTED)))
+		{
+			
+		}
+		
+		else if(receivedHeader.equals(String.valueOf(Constants.TABLE_DATA)))
+		{
+			//clear the neighbours set and fill it with TABLE_DATA
+			String all = new String(body);
+			all = all.replace("[", "");
+			all = all.replace("]", "");
+			
+			String [] nodes = all.split(",");
+			
+			neighbours.clear();
+			
+			for(int i=0; i<nodes.length; i++)
+			{
+				neighbours.add(nodes[i]);
+			}
+			
+			//finally add the access point itself
+			neighbours.add(MiddlewareUtil.getIPAddress().get(0) + ":" + Constants.PERMANENT_AP_CREATED);
+			
+			Log.d("better", "TABLE_DATA --> neighbours" + neighbours.toString());
+		}
+		
+		else if(receivedHeader.equals(String.valueOf(Constants.DATA)))
+		{
+			//
+		}
+		
+		else
+		{
+			
+		}
+		
+	}
+	
     private void setListener()
     {
     	node.setDataReceived(this);
@@ -224,6 +315,21 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
     	accessPoint.setDataReceived(this);
     	accessPoint.setAddressTable(this);
     }
+    
+    @Override
+	public void nodeAdded(Node node) {
+		
+		Log.d("better", "Node Added!");
+		Log.d("better", node.getAddress().toString()+":"+node.getPort());
+	}
+
+	@Override
+	public void nodeRemoved(Node node) {
+		
+		Log.d("better", "Node Added!");
+		Log.d("better", node.getAddress().toString()+":"+node.getPort());
+	}
+	
 
 	@Override
 	public void accessPointCreated(boolean success, InetAddress address, int port, int number) {
@@ -283,10 +389,18 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 					try
 					{
 						//stop the previous node
-						node.stop();
-						node = null;
+						try
+						{
+							node.stop();
+							node = null;
+						}
+						catch(Exception e)
+						{
+							Log.d("better", "Unable to stop previous node!");
+							e.printStackTrace();
+						}
 						
-						node = new Node(state, randomPort.nextInt(3000));
+						node = new Node(state, 1000 + randomPort.nextInt(3000));
 						setListener();
 	    				node.startReceiverThread();
 	    				
@@ -336,28 +450,44 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 	    registerReceiver(batteryReceiver, filter);
 	    
 	}
+	
+	public class ImageAdapter extends BaseAdapter {
+	    int mGalleryItemBackground;
+	    private Context mContext;
 
-	@Override
-	public void nodeAdded(Node node) {
-		
-		Log.d("better", "Node Added!");
-		Log.d("better", node.getAddress().toString()+":"+node.getPort());
-	}
+	    public ImageAdapter(Context c) {
+	        mContext = c;
+	        TypedArray a = obtainStyledAttributes(R.styleable.HelloGallery);
+	        mGalleryItemBackground = a.getResourceId(
+	                R.styleable.HelloGallery_android_galleryItemBackground, 0);
+	        a.recycle();
+	    }
 
-	@Override
-	public void nodeRemoved(Node node) {
-		
-		Log.d("better", "Node Added!");
-		Log.d("better", node.getAddress().toString()+":"+node.getPort());
+	    public int getCount() {
+	        return slides.length;
+	    }
+
+	    public Object getItem(int position) {
+	        return position;
+	    }
+
+	    public long getItemId(int position) {
+	        return position;
+	    }
+
+	    public View getView(int position, View convertView, ViewGroup parent) {
+	    	
+	    	ImageView iv = new ImageView(getApplicationContext());
+	        iv.setImageResource(slides[position]);
+	        iv.setScaleType(ImageView.ScaleType.FIT_XY);
+	        iv.setLayoutParams(new Gallery.LayoutParams(150,120));
+	        iv.setBackgroundResource(mGalleryItemBackground);
+	        
+	        return iv;
+	    }
 	}
+	
 
 	
-	@Override
-	public void nodeReceivedData(byte[] data) {
-		
-		String receivedData = new String(data);
-		Log.d("better", receivedData);
-		
-	}
 
 }

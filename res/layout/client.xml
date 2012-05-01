@@ -15,7 +15,7 @@
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:text="@string/info"/>
-    
+        
     <TextView 
         android:id="@+id/lblInfo"
         android:layout_width="fill_parent"

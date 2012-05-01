@@ -4,6 +4,8 @@
     <string name="hello">Hello World, MiddlewareMultimediaActivity!</string>
     <string name="app_name">MiddlewareMultimedia</string>
     
+    <string name = "presenter">Presenter</string>
+    
     <string name="accesspointmode">Access Point Mode</string>
     <string name="clientmode">Client mode</string>
     

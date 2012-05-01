@@ -1,7 +1,9 @@
 package com.multimedia.middleware;
 
 import java.net.InetAddress;
+import java.util.HashSet;
 import java.util.Random;
+import java.util.Set;
 
 import android.app.Activity;
 import android.os.Bundle;
@@ -39,6 +41,8 @@ public class AccessPointActivity extends Activity implements DataReceived, Addre
 	//if a the access point is to be changed
 	Node newNode;
 	
+	Set<String> neighbours = null;
+	
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -48,6 +52,8 @@ public class AccessPointActivity extends Activity implements DataReceived, Addre
 		state = new NodeState("10", "1.2", "90");
 		state.setStatus(true);
 		state.setCanCreate(true);
+		
+		neighbours = new HashSet<String>();
 		
 		txtAddress = (EditText)this.findViewById(R.id.txtAddress);
 
@@ -281,8 +287,35 @@ public class AccessPointActivity extends Activity implements DataReceived, Addre
 	@Override
 	public void nodeReceivedData(byte[] data) {
 		
-		String receivedString = new String(data);
-		Log.d("better", receivedString);
+		String receivedData = new String(data);
+		Log.d("better", receivedData);
+		
+		byte[] header = new byte[1];
+		header[0] = data[0];
+		byte body[] = new byte[data.length-1];
+		
+		for(int i=0; i<data.length-1; i++)
+		{
+			body[i] = data[i+1];
+		}
+		
+        String receivedHeader = new String(header);
+        
+		if(receivedHeader.equals(String.valueOf(Constants.NEW_NODE)))
+		{
+			final String receivedBody = new String(body);
+			String [] nodes = receivedBody.split(",");
+			
+			for(int i=0; i<nodes.length; i++)
+			{
+				if(nodes[i].length() > 1)
+				{
+					neighbours.add(nodes[i]);
+				}
+			}
+			
+			Log.d("better", "neighbours -->" + neighbours.toString());
+		}
 	}
 	
 }
