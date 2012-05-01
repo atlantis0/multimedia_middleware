@@ -50,6 +50,7 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 	Button btnSendConnectionProfile;
 	Button btnInfo;
 	TextView lblInfo;
+	ImageView imgSlide;
 	
     /** Called when the activity is first created. */
     @Override
@@ -61,6 +62,7 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 		state.setStatus(true);
 		state.setCanCreate(true);
 		
+		imgSlide = (ImageView)this.findViewById(R.id.imgSlide);
 		lblInfo = (TextView)this.findViewById(R.id.lblInfo);
 		
 		btnInfo = (Button)this.findViewById(R.id.btnInfo);
@@ -207,8 +209,15 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 					try
 					{
 						//stop the previous node
-						node.stop();
-						node = null;
+						try
+						{
+							node.stop();
+							node = null;
+						}
+						catch (Exception e) {
+							e.printStackTrace();
+						}
+						
 						
 						node = new Node(state, randomPort.nextInt(3000));
 						setListener();
