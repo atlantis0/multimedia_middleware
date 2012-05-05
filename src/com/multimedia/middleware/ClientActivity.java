@@ -1,6 +1,9 @@
 package com.multimedia.middleware;
 
+import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.net.InetAddress;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -19,10 +22,10 @@ import android.os.BatteryManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.View.OnClickListener;
-import android.widget.AdapterView.OnItemClickListener;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.Gallery;
@@ -49,7 +52,7 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
     int temp = -1;
     
     Integer slides [] = {
-    		android.R.drawable.btn_plus,
+    		R.drawable.ic_launcher,
     		android.R.drawable.btn_minus,
     		android.R.drawable.btn_radio,
     		android.R.drawable.btn_star,
@@ -104,22 +107,21 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
         	@Override
 			public void onItemClick(AdapterView<?> arg0, View arg1, int arg2, long arg3)
         	{
-        		Bitmap bm = BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher);
+        		Bitmap bm = BitmapFactory.decodeResource(getResources(), slides[0]);
 				ByteArrayOutputStream baos = new ByteArrayOutputStream();  
 				bm.compress(Bitmap.CompressFormat.PNG, 100, baos);  
 				byte[] imageBytes = baos.toByteArray();
-				
-        		MiddlewarePacket packet = new MiddlewarePacket();
-        		byte [] header = {(byte)Constants.DATA};
-        		packet.setPacketData(header, imageBytes);
+
+			    
+				Log.d("better", "sending ..." + imageBytes.toString());
         		
         		if(!isAccessPoint)
         		{
-            		broadCastData(node, neighbours, packet);
+            		broadCastData(Constants.DATA, imageBytes, node, neighbours);
         		}
         		else
         		{
-        			broadCastData(accessPoint, neighbours, packet);
+        			broadCastData(Constants.DATA, imageBytes, accessPoint, neighbours);
         		}
         		
         		Toast.makeText(getApplicationContext(), "Selected", Toast.LENGTH_SHORT).show();
@@ -142,7 +144,7 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 				{
 					try
 					{
-	    				node = new Node(state, randomPort.nextInt(3000));
+	    				node = new Node(state, 1000 + randomPort.nextInt(3000));
 	    				setListener();
 	    				node.startReceiverThread();
 	    				
@@ -197,7 +199,7 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
     {
     	boolean status = false;
     	
-    	MiddlewarePacket packet = new MiddlewarePacket();
+    	MiddlewarePacket packet = new MiddlewarePacket(node.getPort());
 		byte [] header = {(byte)Constants.CONNECTION_PROFILE};
 		String nodeProfile = state.toString();
 		packet.setPacketData(header, nodeProfile.getBytes());
@@ -213,12 +215,12 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
     	boolean status = false;
     	
     	//request table 
-		MiddlewarePacket packet = new MiddlewarePacket();
+		MiddlewarePacket packet = new MiddlewarePacket(node.getPort());
 		byte [] header = {(byte)Constants.REQUEST_TABLE};
 		String data = "data";
 		packet.setPacketData(header, data.getBytes());
 		InetAddress address = InetAddress.getAllByName(MiddlewareUtil.getIPAddress().get(0))[0];
-		node.sendData(packet, address, atPort);
+		node.sendData(packet, address, Constants.PERMANET_AP_PORT);
 		
 		status = true;
     	
@@ -226,7 +228,7 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
     }
 
 	
-	private void broadCastData(Node node, Set<String> nodes, MiddlewarePacket packet)
+	private void broadCastData(char command, byte[] data, Node node, Set<String> nodes)
 	{
 		Iterator<String> iter = nodes.iterator();
 		
@@ -237,6 +239,10 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 		{
 			try
 			{
+				MiddlewarePacket packet = new MiddlewarePacket(node.getPort());
+				byte [] header = {(byte)command};
+				packet.setPacketData(header, data);
+				
 				address = iter.next().split(":");
 				nodeAddress = InetAddress.getByName(address[0]);
 				node.sendData(packet, nodeAddress, new Integer(address[1]));
@@ -312,17 +318,20 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 		{
 			try
 			{
+				Log.d("better", "receiving..." + body.toString());
 				final Bitmap bmp=BitmapFactory.decodeByteArray(body,0,body.length);
 				
 				imgPresenter.post(new Runnable() {
 					
 					@Override
 					public void run() {
+						Log.d("better", "setting bitmap...");
 						imgPresenter.setImageBitmap(bmp);
 					}
 				});
 			}
 			catch (Exception e) {
+				Log.d("better", "failed to decode bitmap");
 				e.printStackTrace();
 			}
 			
@@ -373,7 +382,7 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 			String username = MiddlewareUtil.username;
 			String password = MiddlewareUtil.password;
 			
-			MiddlewarePacket packet = new MiddlewarePacket();
+			MiddlewarePacket packet = new MiddlewarePacket(port);
 			byte [] header = {(byte)Constants.PERMANENT_AP_CREATED};
 			packet.setPacketData(header, (username+":"+password).getBytes());
 			

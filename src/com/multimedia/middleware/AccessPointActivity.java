@@ -73,7 +73,7 @@ public class AccessPointActivity extends Activity implements DataReceived, Addre
 				try
 				{
 					InetAddress address = InetAddress.getByName(total[0]);
-					MiddlewarePacket packet = new MiddlewarePacket();
+					MiddlewarePacket packet = new MiddlewarePacket(new Integer(total[1]));
 					byte [] header = {(byte)Constants.REQUEST_TABLE};
 					packet.setPacketData(header, "some data".getBytes());
 					newNode.sendData(packet, address, new Integer(total[1]));
@@ -157,7 +157,7 @@ public class AccessPointActivity extends Activity implements DataReceived, Addre
     {
     	boolean status = false;
     	
-    	MiddlewarePacket packet = new MiddlewarePacket();
+    	MiddlewarePacket packet = new MiddlewarePacket(node.getPort());
 		byte [] header = {(byte)Constants.CONNECTION_PROFILE};
 		String nodeProfile = state.toString();
 		packet.setPacketData(header, nodeProfile.getBytes());
@@ -242,7 +242,7 @@ public class AccessPointActivity extends Activity implements DataReceived, Addre
 							{
 								try
 								{
-									newNode = new Node(state, 1000 + randomPort.nextInt(3000));
+									newNode = new Node(state, 10000 + randomPort.nextInt(30000));
 									setNewNodeListener();
 									newNode.startReceiverThread();
 									
@@ -325,17 +325,20 @@ public class AccessPointActivity extends Activity implements DataReceived, Addre
 		{
 			try
 			{
+				Log.d("better", "receiving..." + body.toString());
 				final Bitmap bmp=BitmapFactory.decodeByteArray(body,0,body.length);
 				
 				imgSlide.post(new Runnable() {
 					
 					@Override
 					public void run() {
+						Log.d("better", "setting bitmap....");
 						imgSlide.setImageBitmap(bmp);
 					}
 				});
 			}
 			catch (Exception e) {
+				Log.d("better", "failed to decode bitmap");
 				e.printStackTrace();
 			}
 			
