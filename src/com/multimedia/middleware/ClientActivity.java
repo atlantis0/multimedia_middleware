@@ -1,7 +1,9 @@
 package com.multimedia.middleware;
 
 import java.io.ByteArrayOutputStream;
+import java.io.OutputStream;
 import java.net.InetAddress;
+import java.net.Socket;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Random;
@@ -176,7 +178,7 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 					}
 					else
 					{
-						neighbours = accessPoint.getRoutingTable().getRoutingTable().keySet();
+						neighbours = accessPoint.getRoutingTable().getTable().keySet();
 						Log.d("better", neighbours.toString());
 					}
 					
@@ -199,6 +201,7 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
     	MiddlewarePacket packet = new MiddlewarePacket(node.getPort());
 		byte [] header = {(byte)Constants.CONNECTION_PROFILE};
 		String nodeProfile = state.toString();
+		//new byte[] {-119, 80, 13, 10, 0, 32, 23}
 		packet.setPacketData(header, nodeProfile.getBytes());
 		InetAddress address = InetAddress.getAllByName(MiddlewareUtil.getIPAddress().get(0))[0];
 		node.sendData(packet, address, port);
@@ -229,20 +232,43 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 	{
 		Iterator<String> iter = nodes.iterator();
 		
-		String address[] = null;
-		InetAddress nodeAddress = null;
-		
 		while(iter.hasNext())
 		{
 			try
 			{
-				MiddlewarePacket packet = new MiddlewarePacket(node.getPort());
+				final MiddlewarePacket packet = new MiddlewarePacket(node.getPort());
 				byte [] header = {(byte)command};
 				packet.setPacketData(header, data);
 				
-				address = iter.next().split(":");
-				nodeAddress = InetAddress.getByName(address[0]);
-				node.sendData(packet, nodeAddress, new Integer(address[1]));
+				final String address[] = iter.next().split(":");
+				final InetAddress nodeAddress = InetAddress.getByName(address[0]);
+				
+				//node.sendData(packet, nodeAddress, new Integer(address[1]));
+				
+				new Thread(new Runnable() {
+					
+					@Override
+					public void run() {
+						
+						Socket outSocket = null;
+						try
+						{
+							outSocket = new Socket(nodeAddress, new Integer(address[1])); 
+							OutputStream out = outSocket.getOutputStream();
+							out.write(packet.getMiddleWareData());
+							out.close();
+							outSocket.close();
+						}
+						catch(Exception e)
+						{
+							e.printStackTrace();
+						}
+						
+						
+					}
+				}).start();
+				
+				
 			}
 			catch(Exception e)
 			{

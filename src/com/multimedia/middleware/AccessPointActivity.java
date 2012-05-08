@@ -67,11 +67,9 @@ public class AccessPointActivity extends Activity implements DataReceived, Addre
 			
 			@Override
 			public void onClick(View v) {
-				
-				String total[] = txtAddress.getText().toString().split(":");
-				
 				try
 				{
+					String total[] = txtAddress.getText().toString().split(":");
 					InetAddress address = InetAddress.getByName(total[0]);
 					MiddlewarePacket packet = new MiddlewarePacket(new Integer(total[1]));
 					byte [] header = {(byte)Constants.REQUEST_TABLE};
