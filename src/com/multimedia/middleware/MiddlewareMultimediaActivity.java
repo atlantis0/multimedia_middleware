@@ -1,8 +1,11 @@
 package com.multimedia.middleware;
 
+import java.lang.reflect.Method;
+
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
@@ -46,6 +49,26 @@ public class MiddlewareMultimediaActivity extends Activity {
 				
 			}
 		});
+        
+        String sClassName = "com.android.settings.vpn.KeyStore"; 
+        
+        try
+        {
+        	Class classToInvestigate = Class.forName(sClassName); 
+        	
+        	Method[] aClassMethods = classToInvestigate.getDeclaredMethods();  
+        	
+        	for(Method m : aClassMethods)  
+        	{  
+        	    Log.d("better",m.toString());
+        	}  
+        	
+        }
+        catch(Exception e)
+        {
+        	e.printStackTrace();
+        }
+        
         
     }
 }

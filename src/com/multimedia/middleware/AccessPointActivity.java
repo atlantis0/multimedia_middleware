@@ -242,7 +242,7 @@ public class AccessPointActivity extends Activity implements DataReceived, Addre
 							{
 								try
 								{
-									newNode = new Node(state, 10000 + randomPort.nextInt(30000));
+									newNode = new Node(state, 1000 + randomPort.nextInt(3000));
 									setNewNodeListener();
 									newNode.startReceiverThread();
 									

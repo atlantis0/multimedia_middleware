@@ -1,9 +1,6 @@
 package com.multimedia.middleware;
 
-import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
 import java.net.InetAddress;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -53,14 +50,13 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
     
     Integer slides [] = {
     		R.drawable.ic_launcher,
-    		android.R.drawable.btn_minus,
-    		android.R.drawable.btn_radio,
-    		android.R.drawable.btn_star,
-    		android.R.drawable.ic_btn_speak_now,
-    		android.R.drawable.ic_dialog_email,
-    		android.R.drawable.ic_dialog_info,
-    		android.R.drawable.ic_dialog_map,
-    		android.R.drawable.ic_dialog_dialer
+    		R.drawable.one,
+    		R.drawable.two,
+    		R.drawable.three,
+    		R.drawable.four,
+    		R.drawable.five,
+    		R.drawable.six,
+    		
 	};
     
     boolean isAccessPoint = false;
@@ -107,8 +103,8 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
         	@Override
 			public void onItemClick(AdapterView<?> arg0, View arg1, int arg2, long arg3)
         	{
-        		Bitmap bm = BitmapFactory.decodeResource(getResources(), slides[0]);
-				ByteArrayOutputStream baos = new ByteArrayOutputStream();  
+        		Bitmap bm = BitmapFactory.decodeResource(getResources(), slides[arg2]);
+				ByteArrayOutputStream baos = new ByteArrayOutputStream();
 				bm.compress(Bitmap.CompressFormat.PNG, 100, baos);  
 				byte[] imageBytes = baos.toByteArray();
 
@@ -181,6 +177,7 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 					else
 					{
 						neighbours = accessPoint.getRoutingTable().getRoutingTable().keySet();
+						Log.d("better", neighbours.toString());
 					}
 					
 				}
