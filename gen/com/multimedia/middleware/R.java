@@ -20,18 +20,25 @@ public final class R {
         public static final int two=0x7f020006;
     }
     public static final class id {
-        public static final int btnAccessPointMode=0x7f060008;
-        public static final int btnClientMode=0x7f060009;
-        public static final int btnHelloPacket=0x7f060001;
-        public static final int btnInfo=0x7f060004;
-        public static final int btnSendConnectionProfile=0x7f060003;
-        public static final int gallery=0x7f060006;
-        public static final int imgPresenter=0x7f060007;
-        public static final int imgSlide=0x7f060002;
-        public static final int lblInfo=0x7f060005;
-        public static final int menuchoose=0x7f06000b;
-        public static final int menucreateap=0x7f06000a;
-        public static final int txtAddress=0x7f060000;
+        public static final int btnAccessPointMode=0x7f06000f;
+        public static final int btnAdd=0x7f06000a;
+        public static final int btnAdd_1=0x7f060002;
+        public static final int btnClientMode=0x7f060010;
+        public static final int btnInfo=0x7f06000c;
+        public static final int btnInfo_1=0x7f060004;
+        public static final int btnSend=0x7f06000b;
+        public static final int btnSendConnectionProfile=0x7f060007;
+        public static final int btnSend_1=0x7f060003;
+        public static final int lblBoard=0x7f06000e;
+        public static final int lblBoard_1=0x7f060006;
+        public static final int lblInfo=0x7f06000d;
+        public static final int lblInfo_1=0x7f060005;
+        public static final int lytMain=0x7f060008;
+        public static final int lytMain_1=0x7f060000;
+        public static final int menuchoose=0x7f060012;
+        public static final int menucreateap=0x7f060011;
+        public static final int txtMessage=0x7f060009;
+        public static final int txtMessage_1=0x7f060001;
     }
     public static final class layout {
         public static final int access=0x7f030000;
@@ -42,20 +49,22 @@ public final class R {
         public static final int setup=0x7f050000;
     }
     public static final class string {
-        public static final int access_point=0x7f040008;
+        public static final int access_point=0x7f04000a;
         public static final int accesspointmode=0x7f040003;
         public static final int app_name=0x7f040001;
-        public static final int choose_permanet=0x7f04000c;
-        public static final int client=0x7f040009;
+        public static final int choose_permanet=0x7f04000e;
+        public static final int client=0x7f04000b;
         public static final int clientmode=0x7f040004;
-        public static final int connection_profile=0x7f04000b;
-        public static final int create_ap=0x7f04000a;
+        public static final int connection_profile=0x7f04000d;
+        public static final int create_ap=0x7f04000c;
         public static final int hello=0x7f040000;
         public static final int hellopacket=0x7f040005;
         public static final int hint=0x7f040006;
         public static final int info=0x7f040007;
-        public static final int presenster_slides=0x7f04000d;
+        public static final int message=0x7f040008;
+        public static final int presenster_slides=0x7f04000f;
         public static final int presenter=0x7f040002;
+        public static final int send=0x7f040009;
     }
     public static final class styleable {
         /** Attributes that can be used with a HelloGallery.

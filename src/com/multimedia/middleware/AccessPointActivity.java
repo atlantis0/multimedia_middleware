@@ -18,6 +18,7 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import com.middleware.listeners.AddressTable;
 import com.middleware.listeners.TempAPToNew;
@@ -34,9 +35,9 @@ public class AccessPointActivity extends Activity implements DataReceived, Addre
 	boolean isAccessPoint = true;
 	
 	//UI Elements
-	Button btnHelloPacket;
-	EditText txtAddress;
-	ImageView imgSlide;
+	TextView lblInfo_1, lblBoard_1;
+	EditText txtMessage_1;
+	Button btnAdd_1, btnSend_1, btnInfo_1;
 	
 	AccessPoint accessPoint;
 	NodeState state;
@@ -58,33 +59,12 @@ public class AccessPointActivity extends Activity implements DataReceived, Addre
 		
 		neighbours = new HashSet<String>();
 		
-		imgSlide = (ImageView)this.findViewById(R.id.imgSlide);
-		txtAddress = (EditText)this.findViewById(R.id.txtAddress);
-
-        btnHelloPacket = (Button)this.findViewById(R.id.btnHelloPacket);
-                
-        btnHelloPacket.setOnClickListener(new OnClickListener() {
-			
-			@Override
-			public void onClick(View v) {
-				try
-				{
-					String total[] = txtAddress.getText().toString().split(":");
-					InetAddress address = InetAddress.getByName(total[0]);
-					MiddlewarePacket packet = new MiddlewarePacket(new Integer(total[1]));
-					byte [] header = {(byte)Constants.REQUEST_TABLE};
-					packet.setPacketData(header, "some data".getBytes());
-					newNode.sendData(packet, address, new Integer(total[1]));
-				}
-				catch (Exception e) {
-					e.printStackTrace();
-				}
-				
-				
-			}
-		});
-        
-        
+		lblInfo_1 = (TextView)this.findViewById(R.id.lblInfo_1);
+		txtMessage_1 = (EditText)this.findViewById(R.id.txtMessage_1);
+		btnAdd_1 = (Button)this.findViewById(R.id.btnAdd_1);
+		btnSend_1 = (Button)this.findViewById(R.id.btnSend_1);
+		btnInfo_1 = (Button)this.findViewById(R.id.btnInfo_1);
+		
     }
     
     private void createTemporaryAcessPoint()

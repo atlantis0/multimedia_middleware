@@ -27,6 +27,7 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.BaseAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Gallery;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -72,6 +73,10 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 	AccessPoint accessPoint;
 	
 	//UI elements
+	TextView lblBoard;
+	EditText txtMessage;
+	Button btnAdd, btnSend;
+	
 	Button btnSendConnectionProfile;
 	Button btnInfo;
 	TextView lblInfo;
@@ -90,10 +95,11 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 		
 		neighbours = new HashSet<String>();
 		
-		g = (Gallery)this.findViewById(R.id.gallery);
-		g.setAdapter(new ImageAdapter(this));
-		
-		imgPresenter = (ImageView)this.findViewById(R.id.imgPresenter);
+		lblInfo = (TextView)this.findViewById(R.id.lblInfo);
+		txtMessage = (EditText)this.findViewById(R.id.txtMessage);
+		btnAdd = (Button)this.findViewById(R.id.btnAdd);
+		btnSend = (Button)this.findViewById(R.id.btnSend);
+		btnInfo = (Button)this.findViewById(R.id.btnInfo);
 		
 		lblInfo = (TextView)this.findViewById(R.id.lblInfo);
 		
@@ -542,53 +548,6 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 	    registerReceiver(batteryReceiver, filter);
 	    
 	}
-	
-	public class ImageAdapter extends BaseAdapter {
-		
-	    int mGalleryItemBackground;
-	    private Context mContext;
-
-	    public ImageAdapter(Context c) {
-	        setmContext(c);
-	        TypedArray a = obtainStyledAttributes(R.styleable.HelloGallery);
-	        mGalleryItemBackground = a.getResourceId(
-	                R.styleable.HelloGallery_android_galleryItemBackground, 0);
-	        a.recycle();
-	    }
-
-	    public int getCount() {
-	        return slides.length;
-	    }
-
-	    public Object getItem(int position) {
-	        return position;
-	    }
-
-	    public long getItemId(int position) {
-	        return position;
-	    }
-
-	    public View getView(int position, View convertView, ViewGroup parent) {
-	    	
-	    	ImageView iv = new ImageView(getApplicationContext());
-	        iv.setImageResource(slides[position]);
-	        iv.setScaleType(ImageView.ScaleType.FIT_XY);
-	        iv.setLayoutParams(new Gallery.LayoutParams(150,120));
-	        iv.setBackgroundResource(mGalleryItemBackground);
-	        
-	        return iv;
-	    }
-
-		public Context getmContext() {
-			return mContext;
-		}
-
-		public void setmContext(Context mContext) {
-			this.mContext = mContext;
-		}
-	}
-	
-
 	
 
 }
