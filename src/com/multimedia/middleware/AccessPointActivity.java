@@ -316,7 +316,49 @@ public class AccessPointActivity extends Activity implements DataReceived, Addre
 				}
 			}
 			
-			Log.d("better", "neighbours -->" + neighbours.toString());
+			Log.d("better", "updated table -->" + neighbours.toString());
+		}
+		
+		else if(receivedHeader.equals(String.valueOf(Constants.TABLE_DATA)))
+		{
+			//clear the neighbors set and fill it with TABLE_DATA
+			String all = new String(body);
+			all = all.replace("[", "");
+			all = all.replace("]", "");
+			
+			String [] nodes = all.split(",");
+			
+			neighbours.clear();
+			
+			for(int i=0; i<nodes.length; i++)
+			{
+				if(nodes[i].length() > 1)
+				{
+					neighbours.add(nodes[i]);
+				}
+			}
+			
+			//finally add the access point itself
+			neighbours.add(MiddlewareUtil.getIPAddress().get(0) + ":" + Constants.PERMANET_AP_PORT);
+			
+			Log.d("better", "TABLE_DATA --> neighbours" + neighbours.toString());
+		}
+		
+		else if(receivedHeader.equals(String.valueOf(Constants.DISCONNECTED)))
+		{
+			final String receivedBody = new String(body);
+			String [] nodes = receivedBody.split(",");
+			
+			for(int i=0; i<nodes.length; i++)
+			{
+				if(nodes[i].length() > 1)
+				{
+					neighbours.remove(nodes[i]);
+					Log.d("better", "removing " + nodes[i] + " ...");
+				}
+			}
+			
+			Log.d("better", "updated table -->" + neighbours.toString());
 		}
 		
 		else if(receivedHeader.equals(String.valueOf(Constants.DATA)))

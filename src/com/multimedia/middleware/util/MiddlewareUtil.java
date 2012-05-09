@@ -64,6 +64,7 @@ public class MiddlewareUtil {
         return address_list;
 	}
 	
+	@SuppressWarnings("static-access")
 	public static void createWifiAccessPoint(Context context, String ntId, String password) {
 	    	try
 	    	{
@@ -98,7 +99,8 @@ public class MiddlewareUtil {
 	    	                            };
 	    	                            for(Method method1: wmMethods){
 	    	                                if(method1.getName().equals("getWifiApState")){
-	    	                                    int apstate;
+	    	                                    @SuppressWarnings("unused")
+												int apstate;
 	    	                                    apstate=(Integer)method1.invoke(wifiManager);
 	    	                                }
 	    	                            }
@@ -130,6 +132,7 @@ public class MiddlewareUtil {
 	       
 	    }
 	
+	@SuppressWarnings("static-access")
 	public static boolean connectToNetwork(Context context, String username, String password)
 	{
    	 	boolean status = false;
@@ -166,7 +169,8 @@ public class MiddlewareUtil {
 		return status;
 	 }
 	
-	 public static boolean disableAP(Context context, String ntId, String password) throws Exception
+	 @SuppressWarnings("static-access")
+	public static boolean disableAP(Context context, String ntId, String password) throws Exception
 	 {
 		 boolean apstatus = false;
 		 

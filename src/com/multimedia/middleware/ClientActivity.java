@@ -193,6 +193,18 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
         
     }
     
+    private void setListener()
+    {
+    	node.setDataReceived(this);
+    	node.setCreatePermanetAccessPoint(this);
+    	node.setNewAccessPointCreated(this);
+    }
+    
+    private void setAccessPointListener()
+    {
+    	accessPoint.setDataReceived(this);
+    	accessPoint.setAddressTable(this);
+    }
     
     private boolean join(Node node, NodeState state, int port) throws Exception
     {
@@ -227,6 +239,126 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
     	return status;
     }
 
+    @Override
+	public void nodeReceivedData(final byte[] data) {
+		
+		String receivedData = new String(data);
+		Log.d("better", receivedData);
+		
+		final byte[] header = new byte[1];
+		header[0] = data[0];
+		final byte body[] = new byte[data.length-1];
+		
+		for(int i=0; i<data.length-1; i++)
+		{
+			body[i] = data[i+1];
+		}
+		
+        String receivedHeader = new String(header);
+        
+		if(receivedHeader.equals(String.valueOf(Constants.NEW_NODE)))
+		{
+			final String receivedBody = new String(body);
+			String [] nodes = receivedBody.split(",");
+			
+			for(int i=0; i<nodes.length; i++)
+			{
+				if(nodes[i].length() > 1)
+				{
+					neighbours.add(nodes[i]);
+				}
+			}
+			
+			Log.d("better", "updated table -->" + neighbours.toString());
+		}
+		
+		else if(receivedHeader.equals(String.valueOf(Constants.DISCONNECTED)))
+		{
+			final String receivedBody = new String(body);
+			String [] nodes = receivedBody.split(",");
+			
+			for(int i=0; i<nodes.length; i++)
+			{
+				if(nodes[i].length() > 1)
+				{
+					neighbours.remove(nodes[i]);
+					Log.d("better", "removing " + nodes[i] + " ...");
+				}
+			}
+			
+			Log.d("better", "updated table -->" + neighbours.toString());
+		}
+		
+		else if(receivedHeader.equals(String.valueOf(Constants.DISCONNECTED)))
+		{
+			final String receivedBody = new String(body);
+			String [] nodes = receivedBody.split(",");
+			
+			for(int i=0; i<nodes.length; i++)
+			{
+				if(nodes[i].length() > 1)
+				{
+					neighbours.remove(nodes[i]);
+					Log.d("better", "removing " + nodes[i] + " ...");
+				}
+			}
+			
+			Log.d("better", "updated table -->" + neighbours.toString());
+		}
+		
+		else if(receivedHeader.equals(String.valueOf(Constants.TABLE_DATA)))
+		{
+			//clear the neighbors set and fill it with TABLE_DATA
+			String all = new String(body);
+			all = all.replace("[", "");
+			all = all.replace("]", "");
+			
+			String [] nodes = all.split(",");
+			
+			neighbours.clear();
+			
+			for(int i=0; i<nodes.length; i++)
+			{
+				if(nodes[i].length() > 1)
+				{
+					neighbours.add(nodes[i]);
+				}
+			}
+			
+			//finally add the access point itself
+			neighbours.add(MiddlewareUtil.getIPAddress().get(0) + ":" + Constants.PERMANET_AP_PORT);
+			
+			Log.d("better", "TABLE_DATA --> neighbours" + neighbours.toString());
+		}
+		
+		else if(receivedHeader.equals(String.valueOf(Constants.DATA)))
+		{
+			try
+			{
+				Log.d("better", "receiving..." + body.toString());
+				final Bitmap bmp=BitmapFactory.decodeByteArray(body,0,body.length);
+				
+				imgPresenter.post(new Runnable() {
+					
+					@Override
+					public void run() {
+						Log.d("better", "setting bitmap...");
+						imgPresenter.setImageBitmap(bmp);
+					}
+				});
+			}
+			catch (Exception e) {
+				Log.d("better", "failed to decode bitmap");
+				e.printStackTrace();
+			}
+			
+		}
+		
+		else
+		{
+			
+		}	
+	}
 	
 	private void broadCastData(char command, byte[] data, Node node, Set<String> nodes)
 	{
@@ -277,109 +409,6 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 		}
 	}
 	
-	@Override
-	public void nodeReceivedData(final byte[] data) {
-		
-		String receivedData = new String(data);
-		Log.d("better", receivedData);
-		
-		final byte[] header = new byte[1];
-		header[0] = data[0];
-		final byte body[] = new byte[data.length-1];
-		
-		for(int i=0; i<data.length-1; i++)
-		{
-			body[i] = data[i+1];
-		}
-		
-        String receivedHeader = new String(header);
-        
-		if(receivedHeader.equals(String.valueOf(Constants.NEW_NODE)))
-		{
-			final String receivedBody = new String(body);
-			String [] nodes = receivedBody.split(",");
-			
-			for(int i=0; i<nodes.length; i++)
-			{
-				if(nodes[i].length() > 1)
-				{
-					neighbours.add(nodes[i]);
-				}
-			}
-			
-			Log.d("better", "neighbours -->" + neighbours.toString());
-		}
-		
-		else if(receivedHeader.equals(String.valueOf(Constants.DISCONNECTED)))
-		{
-			
-		}
-		
-		else if(receivedHeader.equals(String.valueOf(Constants.TABLE_DATA)))
-		{
-			//clear the neighbours set and fill it with TABLE_DATA
-			String all = new String(body);
-			all = all.replace("[", "");
-			all = all.replace("]", "");
-			
-			String [] nodes = all.split(",");
-			
-			neighbours.clear();
-			
-			for(int i=0; i<nodes.length; i++)
-			{
-				neighbours.add(nodes[i]);
-			}
-			
-			//finally add the access point itself
-			neighbours.add(MiddlewareUtil.getIPAddress().get(0) + ":" + Constants.PERMANET_AP_PORT);
-			
-			Log.d("better", "TABLE_DATA --> neighbours" + neighbours.toString());
-		}
-		
-		else if(receivedHeader.equals(String.valueOf(Constants.DATA)))
-		{
-			try
-			{
-				Log.d("better", "receiving..." + body.toString());
-				final Bitmap bmp=BitmapFactory.decodeByteArray(body,0,body.length);
-				
-				imgPresenter.post(new Runnable() {
-					
-					@Override
-					public void run() {
-						Log.d("better", "setting bitmap...");
-						imgPresenter.setImageBitmap(bmp);
-					}
-				});
-			}
-			catch (Exception e) {
-				Log.d("better", "failed to decode bitmap");
-				e.printStackTrace();
-			}
-			
-		}
-		
-		else
-		{
-			
-		}
-		
-	}
-	
-    private void setListener()
-    {
-    	node.setDataReceived(this);
-    	node.setCreatePermanetAccessPoint(this);
-    	node.setNewAccessPointCreated(this);
-    }
-    
-    private void setAccessPointListener()
-    {
-    	accessPoint.setDataReceived(this);
-    	accessPoint.setAddressTable(this);
-    }
-    
     @Override
 	public void nodeAdded(Node node) {
 		
@@ -393,7 +422,6 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 		Log.d("better", "Node Added!");
 		Log.d("better", node.getAddress().toString()+":"+node.getPort());
 	}
-	
 
 	@Override
 	public void accessPointCreated(boolean success, InetAddress address, int port, int number) {
@@ -495,7 +523,7 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 		
 	}
 	
-	private void registerForBatteryState()
+	public void registerForBatteryState()
 	{
 		BroadcastReceiver batteryReceiver = new BroadcastReceiver() {
 	        @Override
@@ -516,11 +544,12 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 	}
 	
 	public class ImageAdapter extends BaseAdapter {
+		
 	    int mGalleryItemBackground;
 	    private Context mContext;
 
 	    public ImageAdapter(Context c) {
-	        mContext = c;
+	        setmContext(c);
 	        TypedArray a = obtainStyledAttributes(R.styleable.HelloGallery);
 	        mGalleryItemBackground = a.getResourceId(
 	                R.styleable.HelloGallery_android_galleryItemBackground, 0);
@@ -549,6 +578,14 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 	        
 	        return iv;
 	    }
+
+		public Context getmContext() {
+			return mContext;
+		}
+
+		public void setmContext(Context mContext) {
+			this.mContext = mContext;
+		}
 	}
 	
 
