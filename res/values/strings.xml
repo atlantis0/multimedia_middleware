@@ -14,6 +14,7 @@
     <string name = "info">Info</string>
     <string name = "message">Whats on your mind?</string>
     <string name = "send">Send</string>
+    <string name = "friend_name">Name</string>
     
     <string name="access_point">Acces Point</string>
     <string name="client">Client</string>

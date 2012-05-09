@@ -1,6 +1,5 @@
 package com.multimedia.middleware;
 
-import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
@@ -14,7 +13,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.BatteryManager;
@@ -22,16 +20,10 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemClickListener;
-import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.Gallery;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.middleware.listeners.AddressTable;
 import com.middleware.listeners.CreatePermanetAccessPoint;
@@ -46,21 +38,12 @@ import com.multimedia.middleware.util.MiddlewareUtil;
 
 public class ClientActivity extends Activity implements DataReceived, CreatePermanetAccessPoint, NewAccessPoint, AddressTable {
 	
+	public static final int FIND_FRIENDS = 1001;
+	
     int scale = -1;
     int level = -1;
     int voltage = -1;
     int temp = -1;
-    
-    Integer slides [] = {
-    		R.drawable.ic_launcher,
-    		R.drawable.one,
-    		R.drawable.two,
-    		R.drawable.three,
-    		R.drawable.four,
-    		R.drawable.five,
-    		R.drawable.six,
-    		
-	};
     
     boolean isAccessPoint = false;
     
@@ -80,7 +63,6 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 	Button btnSendConnectionProfile;
 	Button btnInfo;
 	TextView lblInfo;
-	Gallery g;
 	ImageView imgPresenter;
 	
     /** Called when the activity is first created. */
@@ -105,35 +87,6 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 		
 		btnInfo = (Button)this.findViewById(R.id.btnInfo);
         btnSendConnectionProfile = (Button)this.findViewById(R.id.btnSendConnectionProfile);
-
-        g.setOnItemClickListener(new OnItemClickListener() {
-        	
-        	@Override
-			public void onItemClick(AdapterView<?> arg0, View arg1, int arg2, long arg3)
-        	{
-        		Bitmap bm = BitmapFactory.decodeResource(getResources(), slides[arg2]);
-				ByteArrayOutputStream baos = new ByteArrayOutputStream();
-				bm.compress(Bitmap.CompressFormat.PNG, 100, baos);  
-				byte[] imageBytes = baos.toByteArray();
-
-			    
-				Log.d("better", "sending ..." + imageBytes.toString());
-        		
-        		if(!isAccessPoint)
-        		{
-            		broadCastData(Constants.DATA, imageBytes, node, neighbours);
-        		}
-        		else
-        		{
-        			broadCastData(Constants.DATA, imageBytes, accessPoint, neighbours);
-        		}
-        		
-        		Toast.makeText(getApplicationContext(), "Selected", Toast.LENGTH_SHORT).show();
-        		imgPresenter.setImageResource(slides[arg2]);
-        		
-        		
-        	}
-		});
         
         btnSendConnectionProfile.setOnClickListener(new OnClickListener() {
         	
@@ -194,6 +147,18 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 					e.printStackTrace();
 				}
 
+			}
+		});
+        
+        btnAdd.setOnClickListener(new OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				
+				Intent intent = new Intent(getApplicationContext(), SelectFriendsActivity.class);
+				intent.putExtra("list", (String [])neighbours.toArray());
+				startActivityForResult(intent, FIND_FRIENDS);
+				
 			}
 		});
         
@@ -272,23 +237,6 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 				if(nodes[i].length() > 1)
 				{
 					neighbours.add(nodes[i]);
-				}
-			}
-			
-			Log.d("better", "updated table -->" + neighbours.toString());
-		}
-		
-		else if(receivedHeader.equals(String.valueOf(Constants.DISCONNECTED)))
-		{
-			final String receivedBody = new String(body);
-			String [] nodes = receivedBody.split(",");
-			
-			for(int i=0; i<nodes.length; i++)
-			{
-				if(nodes[i].length() > 1)
-				{
-					neighbours.remove(nodes[i]);
-					Log.d("better", "removing " + nodes[i] + " ...");
 				}
 			}
 			
