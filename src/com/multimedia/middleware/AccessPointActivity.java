@@ -11,8 +11,6 @@ import java.util.Set;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -67,6 +65,7 @@ public class AccessPointActivity extends Activity implements DataReceived, Addre
 		
 		neighbours = new HashSet<String>();
 		
+		lblBoard_1 = (TextView)this.findViewById(R.id.lblBoard_1);
 		lblInfo_1 = (TextView)this.findViewById(R.id.lblInfo_1);
 		txtMessage_1 = (EditText)this.findViewById(R.id.txtMessage_1);
 		btnAdd_1 = (Button)this.findViewById(R.id.btnAdd_1);
