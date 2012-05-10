@@ -1,11 +1,16 @@
 package com.multimedia.middleware;
 
+import java.io.OutputStream;
 import java.net.InetAddress;
+import java.net.Socket;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Random;
 import java.util.Set;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
@@ -17,8 +22,8 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.middleware.listeners.AddressTable;
 import com.middleware.listeners.TempAPToNew;
@@ -32,6 +37,8 @@ import com.multimedia.middleware.util.MiddlewareUtil;
 
 public class AccessPointActivity extends Activity implements DataReceived, AddressTable, TempAPToNew{
 
+	public static final int FIND_FRIENDS = 1002;
+	
 	boolean isAccessPoint = true;
 	
 	//UI Elements
@@ -46,6 +53,7 @@ public class AccessPointActivity extends Activity implements DataReceived, Addre
 	Node newNode;
 	
 	Set<String> neighbours = null;
+	Set<String> selected = null;
 	
     /** Called when the activity is first created. */
     @Override
@@ -53,7 +61,7 @@ public class AccessPointActivity extends Activity implements DataReceived, Addre
         super.onCreate(savedInstanceState);
         setContentView(R.layout.access);
         
-		state = new NodeState("10", "1.2", "90");
+		state = new NodeState("10", "1.2", "20");
 		state.setStatus(true);
 		state.setCanCreate(true);
 		
@@ -65,6 +73,86 @@ public class AccessPointActivity extends Activity implements DataReceived, Addre
 		btnSend_1 = (Button)this.findViewById(R.id.btnSend_1);
 		btnInfo_1 = (Button)this.findViewById(R.id.btnInfo_1);
 		
+		btnAdd_1.setOnClickListener(new OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				
+				Intent intent = new Intent(getApplicationContext(), SelectFriendsActivity.class);
+				intent.putExtra("list", getStringArray(neighbours));
+				startActivityForResult(intent, FIND_FRIENDS);
+				
+			}
+		});
+		
+		btnInfo_1.setOnClickListener(new OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				
+				try
+				{
+					if(!isAccessPoint)
+					{
+						requestTable(newNode, Constants.PERMANET_AP_PORT);
+					}
+					else
+					{
+						neighbours = accessPoint.getRoutingTable().getTable().keySet();
+						Log.d("better", neighbours.toString());
+					}
+					
+				}
+				catch(Exception e)
+				{
+					e.printStackTrace();
+				}
+				
+			}
+		});
+		
+		btnSend_1.setOnClickListener(new OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				
+				if(selected != null && selected.size() != 0)
+				{
+					char command = Constants.DATA;
+					String message = txtMessage_1.getText().toString();
+					if(message.length() >= 1)
+					{
+						if(isAccessPoint)
+							broadCastData(command, txtMessage_1.getText().toString().getBytes(), accessPoint, selected);
+						else
+							broadCastData(command, txtMessage_1.getText().toString().getBytes(), newNode, selected);
+					}
+					else
+					{
+						Toast.makeText(getApplicationContext(), "Please enter the message!", Toast.LENGTH_LONG).show();
+					}
+				}
+				else
+				{
+					Toast.makeText(getApplicationContext(), "Select Friends", Toast.LENGTH_LONG).show();
+				}
+				
+			}
+		});
+
+    }
+    
+    public void onActivityResult(int requestCode, int resultCode, Intent data)
+    {
+    	if(resultCode == RESULT_OK)
+    	{
+    		if(requestCode == FIND_FRIENDS)
+    		{
+    			ArrayList<String> list = data.getStringArrayListExtra("selected");
+    			this.selected = arrayListToSet(list);
+    			Log.d("better", "selected..." + this.selected.toString());
+    		}
+    	}
     }
     
     private void createTemporaryAcessPoint()
@@ -146,6 +234,72 @@ public class AccessPointActivity extends Activity implements DataReceived, Addre
     	return status;
     }
     
+    private boolean requestTable(Node node, int atPort) throws Exception
+    {
+    	boolean status = false;
+    	
+    	//request table 
+		MiddlewarePacket packet = new MiddlewarePacket(node.getPort());
+		byte [] header = {(byte)Constants.REQUEST_TABLE};
+		String data = "data";
+		packet.setPacketData(header, data.getBytes());
+		InetAddress address = InetAddress.getAllByName(MiddlewareUtil.getIPAddress().get(0))[0];
+		node.sendData(packet, address, Constants.PERMANET_AP_PORT);
+		
+		status = true;
+    	
+    	return status;
+    }
+    
+    private void broadCastData(char command, byte[] data, Node node, Set<String> nodes)
+	{
+		Iterator<String> iter = nodes.iterator();
+		
+		while(iter.hasNext())
+		{
+			try
+			{
+				final MiddlewarePacket packet = new MiddlewarePacket(node.getPort());
+				byte [] header = {(byte)command};
+				packet.setPacketData(header, data);
+				
+				final String address[] = iter.next().split(":");
+				final InetAddress nodeAddress = InetAddress.getByName(address[0]);
+				
+				//node.sendData(packet, nodeAddress, new Integer(address[1]));
+				
+				new Thread(new Runnable() {
+					
+					@Override
+					public void run() {
+						
+						Socket outSocket = null;
+						try
+						{
+							outSocket = new Socket(nodeAddress, new Integer(address[1])); 
+							OutputStream out = outSocket.getOutputStream();
+							out.write(packet.getMiddleWareData());
+							out.close();
+							outSocket.close();
+						}
+						catch(Exception e)
+						{
+							e.printStackTrace();
+						}
+						
+						
+					}
+				}).start();
+				
+				
+			}
+			catch(Exception e)
+			{
+				e.printStackTrace();
+			}
+		}
+	}
+    
     public void setListener()
     {
     	accessPoint.setDataReceived(this);
@@ -157,6 +311,37 @@ public class AccessPointActivity extends Activity implements DataReceived, Addre
     {
     	newNode.setDataReceived(this);
     }
+    
+    private String [] getStringArray(Set<String> neighbours)
+    {
+    	String [] arrayToReturn;
+    	
+    	Iterator<String> iter = neighbours.iterator();
+    	
+    	arrayToReturn = new String[neighbours.size()];
+    	
+    	int i = 0;
+    	while(iter.hasNext())
+    	{
+    		arrayToReturn[i] = iter.next();
+    		i++;
+    	}
+    	
+    	return arrayToReturn;
+    }
+    
+    private Set<String> arrayListToSet(ArrayList<String> list)
+    {
+    	Set<String> setToReturn = new HashSet<String>();
+    	
+    	for(int i=0; i<list.size(); i++)
+    	{
+    		setToReturn.add(list.get(i));
+    	}
+    	
+    	return setToReturn;
+    }
+
 	
 	@Override
 	public void temporaryAccessPointConnectToNewAP(final boolean success, final String cred) {
@@ -204,7 +389,7 @@ public class AccessPointActivity extends Activity implements DataReceived, Addre
 								}
 								
 								//wait some time until node connects to a network
-								Thread.sleep(8000);
+								Thread.sleep(10000);
 							}
 							catch(Exception e)
 							{
@@ -274,7 +459,7 @@ public class AccessPointActivity extends Activity implements DataReceived, Addre
 		
 		byte[] header = new byte[1];
 		header[0] = data[0];
-		byte body[] = new byte[data.length-1];
+		final byte body[] = new byte[data.length-1];
 		
 		for(int i=0; i<data.length-1; i++)
 		{
@@ -346,14 +531,13 @@ public class AccessPointActivity extends Activity implements DataReceived, Addre
 			try
 			{
 				Log.d("better", "receiving..." + body.toString());
-				final Bitmap bmp=BitmapFactory.decodeByteArray(body,0,body.length);
+				final String receivedBody = new String(body);
 				
-				imgSlide.post(new Runnable() {
+				lblBoard_1.post(new Runnable() {
 					
 					@Override
 					public void run() {
-						Log.d("better", "setting bitmap....");
-						imgSlide.setImageBitmap(bmp);
+						lblBoard_1.setText(receivedBody);
 					}
 				});
 			}

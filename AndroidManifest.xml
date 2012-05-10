@@ -37,6 +37,13 @@
             android:name=".ClientActivity"
             android:label="@string/client"
             android:screenOrientation="portrait">
+        </activity> 
+        
+        <activity
+            android:name=".SelectFriendsActivity"
+            android:label="@string/friend_name" 
+            android:screenOrientation="portrait"
+            android:theme = "@android:style/Theme.Dialog" >
         </activity>
         
     </application>

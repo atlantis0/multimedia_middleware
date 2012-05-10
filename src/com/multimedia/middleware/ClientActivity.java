@@ -3,6 +3,7 @@ package com.multimedia.middleware;
 import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Random;
@@ -13,8 +14,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.os.BatteryManager;
 import android.os.Bundle;
 import android.util.Log;
@@ -22,8 +21,8 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.middleware.listeners.AddressTable;
 import com.middleware.listeners.CreatePermanetAccessPoint;
@@ -51,6 +50,7 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 	NodeState state;
 	
     Set<String> neighbours = null;
+    Set<String> selected = null;
 	
 	//if this node is chosen to become permanent access point
 	AccessPoint accessPoint;
@@ -63,7 +63,6 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 	Button btnSendConnectionProfile;
 	Button btnInfo;
 	TextView lblInfo;
-	ImageView imgPresenter;
 	
     /** Called when the activity is first created. */
     @Override
@@ -71,7 +70,7 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
         super.onCreate(savedInstanceState);
         setContentView(R.layout.client);
         
-		state = new NodeState("10", "1.2", "96");
+		state = new NodeState("10", "1.2", "85");
 		state.setStatus(true);
 		state.setCanCreate(true);
 		
@@ -84,6 +83,7 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 		btnInfo = (Button)this.findViewById(R.id.btnInfo);
 		
 		lblInfo = (TextView)this.findViewById(R.id.lblInfo);
+		lblBoard = (TextView)this.findViewById(R.id.lblBoard);
 		
 		btnInfo = (Button)this.findViewById(R.id.btnInfo);
         btnSendConnectionProfile = (Button)this.findViewById(R.id.btnSendConnectionProfile);
@@ -156,12 +156,55 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 			public void onClick(View v) {
 				
 				Intent intent = new Intent(getApplicationContext(), SelectFriendsActivity.class);
-				intent.putExtra("list", (String [])neighbours.toArray());
+				intent.putExtra("list", getStringArray(neighbours));
 				startActivityForResult(intent, FIND_FRIENDS);
 				
 			}
 		});
         
+        
+        btnSend.setOnClickListener(new OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+
+				if(selected != null && selected.size() != 0)
+				{
+					char command = Constants.DATA;
+					String message = txtMessage.getText().toString();
+					if(message.length() >= 1)
+					{
+						if(isAccessPoint)
+							broadCastData(command, txtMessage.getText().toString().getBytes(), accessPoint, selected);
+						else
+							broadCastData(command, txtMessage.getText().toString().getBytes(), node, selected);
+					}
+					else
+					{
+						Toast.makeText(getApplicationContext(), "Please enter the message!", Toast.LENGTH_LONG).show();
+					}
+				}
+				else
+				{
+					Toast.makeText(getApplicationContext(), "Select Friends", Toast.LENGTH_LONG).show();
+				}
+			}
+		});
+        
+    }
+    
+    
+    public void onActivityResult(int requestCode, int resultCode, Intent data)
+    {
+    	if(resultCode == RESULT_OK)
+    	{
+    		if(requestCode == FIND_FRIENDS)
+    		{
+    			ArrayList<String> list = data.getStringArrayListExtra("selected");
+    			this.selected = arrayListToSet(list);
+    			Log.d("better", "selected..." + this.selected.toString());
+    		}
+    	}
     }
     
     private void setListener()
@@ -208,6 +251,36 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 		status = true;
     	
     	return status;
+    }
+    
+    private String [] getStringArray(Set<String> neighbours)
+    {
+    	String [] arrayToReturn;
+    	
+    	Iterator<String> iter = neighbours.iterator();
+    	
+    	arrayToReturn = new String[neighbours.size()];
+    	
+    	int i = 0;
+    	while(iter.hasNext())
+    	{
+    		arrayToReturn[i] = iter.next();
+    		i++;
+    	}
+    	
+    	return arrayToReturn;
+    }
+    
+    private Set<String> arrayListToSet(ArrayList<String> list)
+    {
+    	Set<String> setToReturn = new HashSet<String>();
+    	
+    	for(int i=0; i<list.size(); i++)
+    	{
+    		setToReturn.add(list.get(i));
+    	}
+    	
+    	return setToReturn;
     }
 
     @Override
@@ -290,19 +363,17 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 			try
 			{
 				Log.d("better", "receiving..." + body.toString());
-				final Bitmap bmp=BitmapFactory.decodeByteArray(body,0,body.length);
+				final String receivedBody = new String(body);
 				
-				imgPresenter.post(new Runnable() {
+				lblBoard.post(new Runnable() {
 					
 					@Override
 					public void run() {
-						Log.d("better", "setting bitmap...");
-						imgPresenter.setImageBitmap(bmp);
+						lblBoard.setText(receivedBody);
 					}
 				});
 			}
 			catch (Exception e) {
-				Log.d("better", "failed to decode bitmap");
 				e.printStackTrace();
 			}
 			
@@ -437,6 +508,7 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 						//stop the previous node
 						try
 						{
+							Log.d("better", "stoping thr previous ...");
 							node.stop();
 							node = null;
 						}
