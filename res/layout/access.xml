@@ -35,16 +35,9 @@
         android:layout_height = "wrap_content"
         android:text="@string/send" />
         
-    <Button 
-        android:id = "@+id/btnInfo_1"
-        android:layout_below="@+id/btnSend_1"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/info"/>
-        
     <TextView 
         android:id="@+id/lblInfo_1"
-        android:layout_below="@+id/btnInfo_1"
+        android:layout_below="@+id/btnSend_1"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content" />
     
@@ -55,7 +48,6 @@
         >
          <TextView 
         android:id = "@+id/lblBoard_1"
-        android:text = "the hhh"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         />    

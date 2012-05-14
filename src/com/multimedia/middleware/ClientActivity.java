@@ -16,7 +16,11 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.BatteryManager;
 import android.os.Bundle;
+import android.provider.Settings.Secure;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
@@ -59,9 +63,6 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 	TextView lblBoard;
 	EditText txtMessage;
 	Button btnAdd, btnSend;
-	
-	Button btnSendConnectionProfile;
-	Button btnInfo;
 	TextView lblInfo;
 	
     /** Called when the activity is first created. */
@@ -80,75 +81,10 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 		txtMessage = (EditText)this.findViewById(R.id.txtMessage);
 		btnAdd = (Button)this.findViewById(R.id.btnAdd);
 		btnSend = (Button)this.findViewById(R.id.btnSend);
-		btnInfo = (Button)this.findViewById(R.id.btnInfo);
 		
 		lblInfo = (TextView)this.findViewById(R.id.lblInfo);
 		lblBoard = (TextView)this.findViewById(R.id.lblBoard);
-		
-		btnInfo = (Button)this.findViewById(R.id.btnInfo);
-        btnSendConnectionProfile = (Button)this.findViewById(R.id.btnSendConnectionProfile);
-        
-        btnSendConnectionProfile.setOnClickListener(new OnClickListener() {
-        	
-			@Override
-			public void onClick(View v) {
-				
-				boolean success = false;
-				btnSendConnectionProfile.setEnabled(false);
-				Random randomPort = new Random();
-				
-				while(!success)
-				{
-					try
-					{
-	    				node = new Node(state, 1000 + randomPort.nextInt(3000));
-	    				setListener();
-	    				node.startReceiverThread();
-	    				
-	    				//start by sending profile information!
-	    				join(node, state, Constants.TEMP_AP_PORT);
-	    				
-	    				success = true;
-	    				
-	    				Log.d("better", "Node Created!");
-					}
-					catch(Exception e)
-					{
-						e.printStackTrace();
-						Log.d("better", "Retrying...");
-					}
-				}
-				
-				//btnSendConnectionProfile.setEnabled(true);
-			}
-		});
-        
-        
-        btnInfo.setOnClickListener(new OnClickListener() {
-			
-			@Override
-			public void onClick(View v) {
-				
-				try
-				{
-					if(!isAccessPoint)
-					{
-						requestTable(node, Constants.PERMANET_AP_PORT);
-					}
-					else
-					{
-						neighbours = accessPoint.getRoutingTable().getTable().keySet();
-						Log.d("better", neighbours.toString());
-					}
-					
-				}
-				catch(Exception e)
-				{
-					e.printStackTrace();
-				}
-
-			}
-		});
+		lblBoard.setText("");
         
         btnAdd.setOnClickListener(new OnClickListener() {
 			
@@ -171,7 +107,9 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 				if(selected != null && selected.size() != 0)
 				{
 					char command = Constants.DATA;
-					String message = txtMessage.getText().toString();
+					
+					String message =  Secure.getString(getApplicationContext().getContentResolver(),Secure.ANDROID_ID) + " : " + txtMessage.getText().toString();
+					
 					if(message.length() >= 1)
 					{
 						if(isAccessPoint)
@@ -193,6 +131,79 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
         
     }
     
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.info, menu);
+        return true;
+    }
+    
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+    	
+    	if(item.getItemId() == R.id.menuconnectionprofile)
+    	{
+    		sendConnectionProfile();
+    		return true;
+    	}
+    	if(item.getItemId() == R.id.menurequesttable)
+    	{
+    		requestTable();
+    		return true;
+    	}
+        
+        return super.onOptionsItemSelected(item);
+    }
+    
+    
+    private void sendConnectionProfile()
+    {
+    	boolean success = false;
+		Random randomPort = new Random();
+		
+		while(!success)
+		{
+			try
+			{
+				node = new Node(state, 1000 + randomPort.nextInt(3000));
+				setListener();
+				node.startReceiverThread();
+				
+				//start by sending profile information!
+				join(node, state, Constants.TEMP_AP_PORT);
+				
+				success = true;
+				
+				Log.d("better", "Node Created!");
+			}
+			catch(Exception e)
+			{
+				e.printStackTrace();
+				Log.d("better", "Retrying...");
+			}
+		}
+    }
+    
+    private void requestTable()
+    {
+    	try
+		{
+			if(!isAccessPoint)
+			{
+				requestTable(node, Constants.PERMANET_AP_PORT);
+			}
+			else
+			{
+				neighbours = accessPoint.getRoutingTable().getTable().keySet();
+				Log.d("better", neighbours.toString());
+			}
+			
+		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+		}
+    }
     
     public void onActivityResult(int requestCode, int resultCode, Intent data)
     {
@@ -245,7 +256,8 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 		byte [] header = {(byte)Constants.REQUEST_TABLE};
 		String data = "data";
 		packet.setPacketData(header, data.getBytes());
-		InetAddress address = InetAddress.getAllByName(MiddlewareUtil.getIPAddress().get(0))[0];
+		InetAddress address = InetAddress.getAllByName(MiddlewareUtil.KNOWN_HOST)[0];
+		//InetAddress address = InetAddress.getAllByName(MiddlewareUtil.getIPAddress().get(0))[0];
 		node.sendData(packet, address, Constants.PERMANET_AP_PORT);
 		
 		status = true;
@@ -353,7 +365,7 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 			}
 			
 			//finally add the access point itself
-			neighbours.add(MiddlewareUtil.getIPAddress().get(0) + ":" + Constants.PERMANET_AP_PORT);
+			neighbours.add(MiddlewareUtil.KNOWN_HOST + ":" + Constants.PERMANET_AP_PORT);
 			
 			Log.d("better", "TABLE_DATA --> neighbours" + neighbours.toString());
 		}
@@ -369,7 +381,7 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 					
 					@Override
 					public void run() {
-						lblBoard.setText(receivedBody);
+						lblBoard.setText(lblBoard.getText().toString() + "\n" + receivedBody);
 					}
 				});
 			}

@@ -12,6 +12,7 @@ import java.util.Set;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.provider.Settings.Secure;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -42,7 +43,7 @@ public class AccessPointActivity extends Activity implements DataReceived, Addre
 	//UI Elements
 	TextView lblInfo_1, lblBoard_1;
 	EditText txtMessage_1;
-	Button btnAdd_1, btnSend_1, btnInfo_1;
+	Button btnAdd_1, btnSend_1;
 	
 	AccessPoint accessPoint;
 	NodeState state;
@@ -66,11 +67,12 @@ public class AccessPointActivity extends Activity implements DataReceived, Addre
 		neighbours = new HashSet<String>();
 		
 		lblBoard_1 = (TextView)this.findViewById(R.id.lblBoard_1);
+		lblBoard_1.setText("");
+		
 		lblInfo_1 = (TextView)this.findViewById(R.id.lblInfo_1);
 		txtMessage_1 = (EditText)this.findViewById(R.id.txtMessage_1);
 		btnAdd_1 = (Button)this.findViewById(R.id.btnAdd_1);
 		btnSend_1 = (Button)this.findViewById(R.id.btnSend_1);
-		btnInfo_1 = (Button)this.findViewById(R.id.btnInfo_1);
 		
 		btnAdd_1.setOnClickListener(new OnClickListener() {
 			
@@ -84,31 +86,6 @@ public class AccessPointActivity extends Activity implements DataReceived, Addre
 			}
 		});
 		
-		btnInfo_1.setOnClickListener(new OnClickListener() {
-			
-			@Override
-			public void onClick(View v) {
-				
-				try
-				{
-					if(!isAccessPoint)
-					{
-						requestTable(newNode, Constants.PERMANET_AP_PORT);
-					}
-					else
-					{
-						neighbours = accessPoint.getRoutingTable().getTable().keySet();
-						Log.d("better", neighbours.toString());
-					}
-					
-				}
-				catch(Exception e)
-				{
-					e.printStackTrace();
-				}
-				
-			}
-		});
 		
 		btnSend_1.setOnClickListener(new OnClickListener() {
 			
@@ -118,7 +95,9 @@ public class AccessPointActivity extends Activity implements DataReceived, Addre
 				if(selected != null && selected.size() != 0)
 				{
 					char command = Constants.DATA;
-					String message = txtMessage_1.getText().toString();
+					
+					String message = Secure.getString(getApplicationContext().getContentResolver(),Secure.ANDROID_ID) + " : " + txtMessage_1.getText().toString();
+					
 					if(message.length() >= 1)
 					{
 						if(isAccessPoint)
@@ -213,6 +192,11 @@ public class AccessPointActivity extends Activity implements DataReceived, Addre
     		choosePermanetAccessPoint();
     		return true;
     	}
+    	if(item.getItemId() == R.id.menurequest)
+    	{
+    		getTableInformation();
+    		return true;
+    	}
         
         return super.onOptionsItemSelected(item);
     }
@@ -242,6 +226,7 @@ public class AccessPointActivity extends Activity implements DataReceived, Addre
 		byte [] header = {(byte)Constants.REQUEST_TABLE};
 		String data = "data";
 		packet.setPacketData(header, data.getBytes());
+		//InetAddress address = InetAddress.getAllByName("192.168.43.1")[0];
 		InetAddress address = InetAddress.getAllByName(MiddlewareUtil.getIPAddress().get(0))[0];
 		node.sendData(packet, address, Constants.PERMANET_AP_PORT);
 		
@@ -298,6 +283,27 @@ public class AccessPointActivity extends Activity implements DataReceived, Addre
 			}
 		}
 	}
+    
+    private void getTableInformation()
+    {
+    	try
+		{
+			if(!isAccessPoint)
+			{
+				requestTable(newNode, Constants.PERMANET_AP_PORT);
+			}
+			else
+			{
+				neighbours = accessPoint.getRoutingTable().getTable().keySet();
+				Log.d("better", neighbours.toString());
+			}
+			
+		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+		}
+    }
     
     public void setListener()
     {
@@ -536,7 +542,7 @@ public class AccessPointActivity extends Activity implements DataReceived, Addre
 					
 					@Override
 					public void run() {
-						lblBoard_1.setText(receivedBody);
+						lblBoard_1.setText(lblBoard_1.getText().toString() + "\n" + receivedBody);
 					}
 				});
 			}

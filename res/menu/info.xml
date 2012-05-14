@@ -1,15 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android" >
     
-<item android:id="@+id/menucreateap"
+<item android:id="@+id/menuconnectionprofile"
           android:icon="@android:drawable/ic_menu_manage"
-          android:title="CREATE_AP" />
+          android:title="CONNECTION_PROFILE" />
 
-<item android:id="@+id/menuchoose"
-          android:icon="@android:drawable/ic_menu_manage"
-          android:title="CHOOSE_PERMANET" />
-
-<item android:id="@+id/menurequest"
+<item android:id="@+id/menurequesttable"
           android:icon="@android:drawable/ic_menu_manage"
           android:title="REQUEST_TABLE" />
 
