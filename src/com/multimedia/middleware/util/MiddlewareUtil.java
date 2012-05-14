@@ -16,6 +16,7 @@ public class MiddlewareUtil {
 
 	public static final String username = "mine";
 	public static final String password = "mineminemine";
+	public static final String KNOWN_HOST = "192.168.43.1";
 	
 	public static ArrayList<String> getIPAddress()
 	{   
