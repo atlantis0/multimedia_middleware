@@ -215,7 +215,8 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 		String nodeProfile = state.toString();
 		//new byte[] {-119, 80, 13, 10, 0, 32, 23}
 		packet.setPacketData(header, nodeProfile.getBytes());
-		InetAddress address = InetAddress.getAllByName(MiddlewareUtil.getIPAddress().get(0))[0];
+		//InetAddress address = InetAddress.getAllByName(MiddlewareUtil.getIPAddress().get(0))[0];
+		InetAddress address = InetAddress.getAllByName(MiddlewareUtil.KNOWN_HOST)[0];
 		node.sendData(packet, address, port);
 		status = true;
     	
@@ -440,7 +441,8 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 			
 			try
 			{
-				node.sendData(packet, InetAddress.getAllByName(MiddlewareUtil.getIPAddress().get(0))[0], Constants.TEMP_AP_PORT);
+				node.sendData(packet, InetAddress.getAllByName(MiddlewareUtil.KNOWN_HOST)[0], Constants.TEMP_AP_PORT);
+				//node.sendData(packet, InetAddress.getAllByName(MiddlewareUtil.getIPAddress().get(0))[0], Constants.TEMP_AP_PORT);
 				MiddlewareUtil.createWifiAccessPoint(getApplicationContext(), username, password);
 				
 				accessPoint = new AccessPoint(state, Constants.PERMANET_AP_PORT);
