@@ -1,6 +1,9 @@
 package com.multimedia.middleware;
 
-import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
@@ -15,8 +18,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.TypedArray;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
+import android.media.MediaPlayer;
 import android.os.BatteryManager;
 import android.os.Bundle;
 import android.util.Log;
@@ -50,16 +52,17 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
     int voltage = -1;
     int temp = -1;
     
+    //app_config.csv
+    Integer file_names [] = {
+    		R.raw.misson,
+    		R.raw.bbc,
+	};
+    
     Integer slides [] = {
-    		R.drawable.ic_launcher,
     		R.drawable.one,
     		R.drawable.two,
-    		R.drawable.three,
-    		R.drawable.four,
-    		R.drawable.five,
-    		R.drawable.six,
-    		
 	};
+    
     
     boolean isAccessPoint = false;
     
@@ -104,26 +107,32 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
         	
         	@Override
 			public void onItemClick(AdapterView<?> arg0, View arg1, int arg2, long arg3)
-        	{
-        		Bitmap bm = BitmapFactory.decodeResource(getResources(), slides[arg2]);
-				ByteArrayOutputStream baos = new ByteArrayOutputStream();
-				bm.compress(Bitmap.CompressFormat.PNG, 100, baos);  
-				byte[] imageBytes = baos.toByteArray();
-
-			    
-				Log.d("better", "sending ..." + imageBytes.toString());
+        	{	
+        		byte [] byteToSend = null;
+        		
+        		try
+        		{
+        			InputStream is = getApplicationContext().getResources().openRawResource(file_names[arg2]);
+                    
+        			byteToSend = org.apache.commons.io.IOUtils.toByteArray(is);
+        		}
+        		catch(Exception e)
+        		{
+        			Log.d("better", "error driung file preparation!");
+        			e.printStackTrace();
+        		}
         		
         		if(!isAccessPoint)
         		{
-            		broadCastData(Constants.DATA, imageBytes, node, neighbours);
+            		broadCastData(Constants.DATA, byteToSend, node, neighbours);
         		}
         		else
         		{
-        			broadCastData(Constants.DATA, imageBytes, accessPoint, neighbours);
+        			broadCastData(Constants.DATA, byteToSend, accessPoint, neighbours);
         		}
         		
         		Toast.makeText(getApplicationContext(), "Selected", Toast.LENGTH_SHORT).show();
-        		imgPresenter.setImageResource(slides[arg2]);
+        		//imgPresenter.setImageResource(slides[arg2]);
         		
         		
         	}
@@ -335,25 +344,41 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 		
 		else if(receivedHeader.equals(String.valueOf(Constants.DATA)))
 		{
-			try
-			{
-				Log.d("better", "receiving..." + body.toString());
-				final Bitmap bmp=BitmapFactory.decodeByteArray(body,0,body.length);
-				
-				imgPresenter.post(new Runnable() {
-					
-					@Override
-					public void run() {
-						Log.d("better", "setting bitmap...");
-						imgPresenter.setImageBitmap(bmp);
-					}
-				});
-			}
-			catch (Exception e) {
-				Log.d("better", "failed to decode bitmap");
-				e.printStackTrace();
-			}
+			Log.d("better", "receiving..." + body.toString());
 			
+			this.runOnUiThread(new Runnable() {
+				
+				@Override
+				public void run() {
+					
+					try
+					{
+						File tempMp3 = File.createTempFile("kurchina", "mp3", getCacheDir());
+				        tempMp3.deleteOnExit();
+				        FileOutputStream fos = new FileOutputStream(tempMp3);
+				        fos.write(body);
+				        fos.close();
+				        
+				        // Tried reusing instance of media player
+				        // but that resulted in system crashes...  
+				        MediaPlayer mediaPlayer = new MediaPlayer();
+
+				        // Tried passing path directly, but kept getting 
+				        // "Prepare failed.: status=0x1"
+				        // so using file descriptor instead
+				        FileInputStream fis = new FileInputStream(tempMp3);
+				        mediaPlayer.setDataSource(fis.getFD());
+
+				        mediaPlayer.prepare();
+				        mediaPlayer.start();
+					}
+					catch(Exception e)
+					{
+						e.printStackTrace();
+					}
+					
+				}
+			});
 		}
 		
 		else

@@ -1,0 +1,95 @@
+python_preamble:
+- import: base64
+- import: re
+- import: google.appengine.ext.bulkload.transform
+- import: google.appengine.ext.bulkload.bulkloader_wizard
+- import: google.appengine.api.datastore
+- import: google.appengine.api.users
+transformers:
+
+- kind: Temp
+  connector: csv
+  connector_options:
+    encoding: iso-8859-15
+
+Requirements,Image_Main_Url,Image_Other_Url,Is_Active,ApplicationWebSite
+
+  property_map:
+    - property: Id
+      external_name: Id
+
+    - property: Name
+      external_name: Name
+
+    - property: Description
+      external_name: Description
+
+    - property: Developer
+      external_name: Developer
+
+    - property: Seller
+      external_name: Seller
+
+    - property: LastModificationDate
+      external_name: LastModificationDate
+
+    - property: Is_Updated
+      external_name: Is_Updated
+
+    - property: Is_Free
+      external_name: Is_Free
+
+    - property: Rate
+      external_name: Rate
+
+    - property: Dev_Website
+      external_name: Dev_Website
+
+    - property: Version
+      external_name: Version
+
+    - property: Ratings_Five_Stars
+      external_name: Ratings_Five_Stars
+
+    - property : Ratings_Four_Stars
+      external_name: Ratings_Four_Stars
+
+    - property: Ratings_Three_Stars
+      external_name: Ratings_Three_Stars
+
+    - property: Ratings_Two_Stars
+      external_name: Ratings_Two_Stars
+
+    - property : Ratings_One_Stars
+      external_name: Ratings_One_Stars 
+
+    - property: More_Seller_Items_Url
+      external_name: More_Seller_Items_Url
+
+    - property: Main_Logo_Url
+      external_name: Main_Logo_Url
+
+    - property : Size
+      external_name: Size
+
+    - property: Language
+      external_name: Language
+
+    - property: Sup_Website
+      external_name: Sup_Website
+
+    - property: Requirements
+      external_name: Requirements
+
+    - property : Image_Main_Url
+      external_name: Image_Main_Url
+
+    - property: Image_Other_Url
+      external_name: Image_Other_Url
+
+    - property : Is_Active
+      external_name: Is_Active
+
+    - property: ApplicationWebSite
+      external_name: ApplicationWebSite
+

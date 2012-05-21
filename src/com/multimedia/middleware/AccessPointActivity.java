@@ -1,13 +1,15 @@
 package com.multimedia.middleware;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.net.InetAddress;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
 
 import android.app.Activity;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -294,7 +296,7 @@ public class AccessPointActivity extends Activity implements DataReceived, Addre
 		
 		byte[] header = new byte[1];
 		header[0] = data[0];
-		byte body[] = new byte[data.length-1];
+		final byte body[] = new byte[data.length-1];
 		
 		for(int i=0; i<data.length-1; i++)
 		{
@@ -363,24 +365,41 @@ public class AccessPointActivity extends Activity implements DataReceived, Addre
 		
 		else if(receivedHeader.equals(String.valueOf(Constants.DATA)))
 		{
-			try
-			{
-				Log.d("better", "receiving..." + body.toString());
-				final Bitmap bmp=BitmapFactory.decodeByteArray(body,0,body.length);
+			Log.d("better", "receiving..." + body.toString());
+			
+			this.runOnUiThread(new Runnable() {
 				
-				imgSlide.post(new Runnable() {
+				@Override
+				public void run() {
 					
-					@Override
-					public void run() {
-						Log.d("better", "setting bitmap....");
-						imgSlide.setImageBitmap(bmp);
+					try
+					{
+						File tempMp3 = File.createTempFile("kurchina", "mp3", getCacheDir());
+				        tempMp3.deleteOnExit();
+				        FileOutputStream fos = new FileOutputStream(tempMp3);
+				        fos.write(body);
+				        fos.close();
+				        
+				        // Tried reusing instance of media player
+				        // but that resulted in system crashes...  
+				        MediaPlayer mediaPlayer = new MediaPlayer();
+
+				        // Tried passing path directly, but kept getting 
+				        // "Prepare failed.: status=0x1"
+				        // so using file descriptor instead
+				        FileInputStream fis = new FileInputStream(tempMp3);
+				        mediaPlayer.setDataSource(fis.getFD());
+
+				        mediaPlayer.prepare();
+				        mediaPlayer.start();
 					}
-				});
-			}
-			catch (Exception e) {
-				Log.d("better", "failed to decode bitmap");
-				e.printStackTrace();
-			}
+					catch(Exception e)
+					{
+						e.printStackTrace();
+					}
+					
+				}
+			});
 			
 		}
 		else
