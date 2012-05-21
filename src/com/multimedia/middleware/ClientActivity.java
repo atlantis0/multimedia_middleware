@@ -1,6 +1,6 @@
 package com.multimedia.middleware;
 
-import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
@@ -50,7 +50,7 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
     int voltage = -1;
     int temp = -1;
     
-    Integer slides [] = {
+    int slides [] = {
     		R.drawable.ic_launcher,
     		R.drawable.one,
     		R.drawable.two,
@@ -60,6 +60,16 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
     		R.drawable.six,
     		
 	};
+    
+    int slide_raw [] = {
+    		R.raw.ic_launcher,
+    		R.raw.one,
+    		R.raw.two,
+    		R.raw.three,
+    		R.raw.four,
+    		R.raw.five,
+    		R.raw.six,
+    };
     
     boolean isAccessPoint = false;
     
@@ -105,12 +115,24 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
         	@Override
 			public void onItemClick(AdapterView<?> arg0, View arg1, int arg2, long arg3)
         	{
-        		Bitmap bm = BitmapFactory.decodeResource(getResources(), slides[arg2]);
-				ByteArrayOutputStream baos = new ByteArrayOutputStream();
-				bm.compress(Bitmap.CompressFormat.PNG, 100, baos);  
-				byte[] imageBytes = baos.toByteArray();
+        		byte[] imageBytes = null;
+        		
+        		try
+        		{
+        			InputStream is = getApplicationContext().getResources().openRawResource(slide_raw[arg2]);
+            		imageBytes = org.apache.commons.io.IOUtils.toByteArray(is);
+        		}
+        		catch(Exception e)
+        		{
+        			Log.d("better", "unable to encode the image");
+        			e.printStackTrace();
+        		}
+				
+        		//Bitmap bm = BitmapFactory.decodeResource(getResources(), slides[arg2]);
+        		//ByteArrayOutputStream baos = new ByteArrayOutputStream();
+				//bm.compress(Bitmap.CompressFormat.PNG, 100, baos);  
+				//imageBytes = baos.toByteArray();
 
-			    
 				Log.d("better", "sending ..." + imageBytes.toString());
         		
         		if(!isAccessPoint)
