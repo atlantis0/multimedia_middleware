@@ -9,15 +9,13 @@ import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.View;
-import android.view.View.OnClickListener;
-import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import com.middleware.listeners.AddressTable;
 import com.middleware.listeners.TempAPToNew;
@@ -34,8 +32,7 @@ public class AccessPointActivity extends Activity implements DataReceived, Addre
 	boolean isAccessPoint = true;
 	
 	//UI Elements
-	Button btnHelloPacket;
-	EditText txtAddress;
+	TextView lblAcessLog;
 	ImageView imgSlide;
 	
 	AccessPoint accessPoint;
@@ -46,11 +43,15 @@ public class AccessPointActivity extends Activity implements DataReceived, Addre
 	
 	Set<String> neighbours = null;
 	
+	Handler handler;
+	
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.access);
+        
+        handler = new Handler();
         
 		state = new NodeState("10", "1.2", "90");
 		state.setStatus(true);
@@ -59,31 +60,8 @@ public class AccessPointActivity extends Activity implements DataReceived, Addre
 		neighbours = new HashSet<String>();
 		
 		imgSlide = (ImageView)this.findViewById(R.id.imgSlide);
-		txtAddress = (EditText)this.findViewById(R.id.txtAddress);
-
-        btnHelloPacket = (Button)this.findViewById(R.id.btnHelloPacket);
-                
-        btnHelloPacket.setOnClickListener(new OnClickListener() {
-			
-			@Override
-			public void onClick(View v) {
-				try
-				{
-					String total[] = txtAddress.getText().toString().split(":");
-					InetAddress address = InetAddress.getByName(total[0]);
-					MiddlewarePacket packet = new MiddlewarePacket(new Integer(total[1]));
-					byte [] header = {(byte)Constants.REQUEST_TABLE};
-					packet.setPacketData(header, "some data".getBytes());
-					newNode.sendData(packet, address, new Integer(total[1]));
-				}
-				catch (Exception e) {
-					e.printStackTrace();
-				}
-				
-				
-			}
-		});
-        
+		lblAcessLog = (TextView)this.findViewById(R.id.lblAcessLog);
+		lblAcessLog.setText("");
         
     }
     
@@ -95,6 +73,8 @@ public class AccessPointActivity extends Activity implements DataReceived, Addre
 			accessPoint = new AccessPoint(state, Constants.TEMP_AP_PORT);
 			setListener();
 			accessPoint.startReceiverThread();
+			
+			lblAcessLog.setText(lblAcessLog.getText().toString() + "Access Point Created" + "\n");
 		}
 		catch(Exception e)
 		{
@@ -108,10 +88,19 @@ public class AccessPointActivity extends Activity implements DataReceived, Addre
     	try
 		{
 			boolean change = accessPoint.choosePermanetAccessPoint();
+			lblAcessLog.setText(lblAcessLog.getText().toString() + "Choosing access point ..." + "\n");
+			
 			if(change)
+			{
 				Log.d("better", "Access Point Changing!");
+				lblAcessLog.setText(lblAcessLog.getText().toString() + "Changing Access Point ..." + "\n");
+			}	
 			else
+			{
 				Log.d("better", "Access Point Remains");
+				lblAcessLog.setText(lblAcessLog.getText().toString() + "Access Point Remains ..." + "\n");
+			}
+				
 		}
 		catch(Exception e)
 		{
@@ -159,10 +148,21 @@ public class AccessPointActivity extends Activity implements DataReceived, Addre
 		byte [] header = {(byte)Constants.CONNECTION_PROFILE};
 		String nodeProfile = state.toString();
 		packet.setPacketData(header, nodeProfile.getBytes());
-		InetAddress address = InetAddress.getAllByName(MiddlewareUtil.getIPAddress().get(0))[0];
+		//InetAddress address = InetAddress.getAllByName(MiddlewareUtil.getIPAddress().get(0))[0];
+		InetAddress address = InetAddress.getAllByName(MiddlewareUtil.KNOWN_HOST)[0];
 		node.sendData(packet, address, port);
 		status = true;
     	
+		lblAcessLog.post(new Runnable() {
+			
+			@Override
+			public void run() {
+				
+				lblAcessLog.setText(lblAcessLog.getText().toString() + "Sending connection profile ..." + "\n");
+				
+			}
+		});
+		
     	return status;
     }
     
@@ -231,6 +231,15 @@ public class AccessPointActivity extends Activity implements DataReceived, Addre
 								e.printStackTrace();
 							}
 							
+							handler.post(new Runnable() {
+								
+								@Override
+								public void run() {
+									
+									lblAcessLog.setText(lblAcessLog.getText().toString() + "Changing from access point to client mode ..." + "\n");
+								}
+							});
+							
 							Log.d("better", "Changing from access point to client mode...");
 							
 							boolean bin = false;
@@ -273,16 +282,36 @@ public class AccessPointActivity extends Activity implements DataReceived, Addre
 	@Override
 	public void nodeAdded(Node node) {
 		
+		final String info = node.getAddress().toString()+":"+node.getPort();
 		Log.d("better", "Node Added!");
-		Log.d("better", node.getAddress().toString()+":"+node.getPort());
+		Log.d("better", info);
+		
+		handler.post(new Runnable() {
+			
+			@Override
+			public void run() {
+				
+				lblAcessLog.setText(lblAcessLog.getText().toString() + "Node Added ... " + info + "\n");
+			}
+		});
 		
 	}
 
 	@Override
 	public void nodeRemoved(Node node) {
 		
+		final String info = node.getAddress().toString()+":"+node.getPort();
 		Log.d("better", "Node Removed!");
-		Log.d("better", node.getAddress().toString()+":"+node.getPort());
+		Log.d("better", info);
+		
+		handler.post(new Runnable() {
+			
+			@Override
+			public void run() {
+				
+				lblAcessLog.setText(lblAcessLog.getText().toString() + "Node Removed ... " + info + "\n");
+			}
+		});
 		
 	}
 	
@@ -317,6 +346,42 @@ public class AccessPointActivity extends Activity implements DataReceived, Addre
 			}
 			
 			Log.d("better", "updated table -->" + neighbours.toString());
+			
+			lblAcessLog.post(new Runnable() {
+				
+				@Override
+				public void run() {
+					lblAcessLog.setText(lblAcessLog.getText().toString() + "New Node: " + neighbours.toString() + "\n");
+					
+				}
+			});
+
+		}
+		
+		else if(receivedHeader.equals(String.valueOf(Constants.DISCONNECTED)))
+		{
+			final String receivedBody = new String(body);
+			String [] nodes = receivedBody.split(",");
+			
+			for(int i=0; i<nodes.length; i++)
+			{
+				if(nodes[i].length() > 1)
+				{
+					neighbours.remove(nodes[i]);
+					Log.d("better", "removing " + nodes[i] + " ...");
+				}
+			}
+			
+			Log.d("better", "updated table -->" + neighbours.toString());
+			
+			lblAcessLog.post(new Runnable() {
+				
+				@Override
+				public void run() {
+					lblAcessLog.setText(lblAcessLog.getText().toString() + "Node diconnected: " + neighbours.toString() + "\n");
+					
+				}
+			});
 		}
 		
 		else if(receivedHeader.equals(String.valueOf(Constants.TABLE_DATA)))
@@ -339,26 +404,19 @@ public class AccessPointActivity extends Activity implements DataReceived, Addre
 			}
 			
 			//finally add the access point itself
-			neighbours.add(MiddlewareUtil.getIPAddress().get(0) + ":" + Constants.PERMANET_AP_PORT);
+			neighbours.add(MiddlewareUtil.KNOWN_HOST + ":" + Constants.PERMANET_AP_PORT);
 			
 			Log.d("better", "TABLE_DATA --> neighbours" + neighbours.toString());
-		}
-		
-		else if(receivedHeader.equals(String.valueOf(Constants.DISCONNECTED)))
-		{
-			final String receivedBody = new String(body);
-			String [] nodes = receivedBody.split(",");
 			
-			for(int i=0; i<nodes.length; i++)
-			{
-				if(nodes[i].length() > 1)
-				{
-					neighbours.remove(nodes[i]);
-					Log.d("better", "removing " + nodes[i] + " ...");
+			lblAcessLog.post(new Runnable() {
+				
+				@Override
+				public void run() {
+					
+					lblAcessLog.setText(lblAcessLog.getText().toString() + "Table data: " + neighbours.toString() + "\n");
+					
 				}
-			}
-			
-			Log.d("better", "updated table -->" + neighbours.toString());
+			});
 		}
 		
 		else if(receivedHeader.equals(String.valueOf(Constants.DATA)))
@@ -374,6 +432,7 @@ public class AccessPointActivity extends Activity implements DataReceived, Addre
 					public void run() {
 						Log.d("better", "setting bitmap....");
 						imgSlide.setImageBitmap(bmp);
+						lblAcessLog.setText(lblAcessLog.getText().toString() + "Data Received" + "\n");
 					}
 				});
 			}

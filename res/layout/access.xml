@@ -1,27 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
+    >
+<LinearLayout 
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
     android:orientation="vertical" >
     
-    <EditText 
-        android:id = "@+id/txtAddress"
+    <TextView 
+        android:id = "@+id/lblAcessLog"
         android:hint = "@string/hint"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         />
     
-    <Button 
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:text = "@string/hellopacket"
-        android:id = "@+id/btnHelloPacket"
-        />
-    
     <ImageView 
         android:id="@+id/imgSlide"
+        android:contentDescription="@string/slide"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         />
         
 </LinearLayout>
+</ScrollView>

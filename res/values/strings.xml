@@ -3,14 +3,16 @@
 
     <string name="hello">Hello World, MiddlewareMultimediaActivity!</string>
     <string name="app_name">MiddlewareMultimedia</string>
-    
+    <string name = "log">Logs</string>
     <string name = "presenter">Presenter</string>
+    
+    <string name = "slide">Image</string>
     
     <string name="accesspointmode">Access Point Mode</string>
     <string name="clientmode">Client mode</string>
     
     <string name="hellopacket">Hello Packet</string>
-    <string name="hint">Hint</string>
+    <string name="hint">Ready</string>
     <string name = "info">Info</string>
     
     <string name="access_point">Acces Point</string>

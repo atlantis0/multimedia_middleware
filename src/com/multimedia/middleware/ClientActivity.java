@@ -19,6 +19,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.BatteryManager;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -84,15 +85,20 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 	//UI elements
 	Button btnSendConnectionProfile;
 	Button btnInfo;
-	TextView lblInfo;
+	TextView lblLog;
 	Gallery g;
 	ImageView imgPresenter;
+	
+	Handler handler;
+	
 	
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.client);
+        
+        handler = new Handler();
         
 		state = new NodeState("10", "1.2", "96");
 		state.setStatus(true);
@@ -104,8 +110,9 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 		g.setAdapter(new ImageAdapter(this));
 		
 		imgPresenter = (ImageView)this.findViewById(R.id.imgPresenter);
-		
-		lblInfo = (TextView)this.findViewById(R.id.lblInfo);
+
+		lblLog = (TextView)this.findViewById(R.id.lblLog);
+		lblLog.setText("");
 		
 		btnInfo = (Button)this.findViewById(R.id.btnInfo);
         btnSendConnectionProfile = (Button)this.findViewById(R.id.btnSendConnectionProfile);
@@ -127,13 +134,6 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
         			Log.d("better", "unable to encode the image");
         			e.printStackTrace();
         		}
-				
-        		//Bitmap bm = BitmapFactory.decodeResource(getResources(), slides[arg2]);
-        		//ByteArrayOutputStream baos = new ByteArrayOutputStream();
-				//bm.compress(Bitmap.CompressFormat.PNG, 100, baos);  
-				//imageBytes = baos.toByteArray();
-
-				Log.d("better", "sending ..." + imageBytes.toString());
         		
         		if(!isAccessPoint)
         		{
@@ -174,6 +174,7 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 	    				success = true;
 	    				
 	    				Log.d("better", "Node Created!");
+	    				
 					}
 					catch(Exception e)
 					{
@@ -242,6 +243,16 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 		node.sendData(packet, address, port);
 		status = true;
     	
+		lblLog.post(new Runnable() {
+			
+			@Override
+			public void run() {
+				
+				lblLog.setText(lblLog.getText().toString() + "Sending connection profile ..." + "\n");
+				
+			}
+		});
+		
     	return status;
     }
     
@@ -260,6 +271,16 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 		
 		status = true;
     	
+		lblLog.post(new Runnable() {
+			
+			@Override
+			public void run() {
+				
+				lblLog.setText(lblLog.getText().toString() + "Requesting table information ..." + "\n");
+				
+			}
+		});
+
     	return status;
     }
 
@@ -294,6 +315,19 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 			}
 			
 			Log.d("better", "updated table -->" + neighbours.toString());
+			
+			
+			lblLog.post(new Runnable() {
+				
+				@Override
+				public void run() {
+					lblLog.setText(lblLog.getText().toString() + "New Node: " + neighbours.toString() + "\n");
+					
+				}
+			});
+			
+			
+			
 		}
 		
 		else if(receivedHeader.equals(String.valueOf(Constants.DISCONNECTED)))
@@ -311,23 +345,19 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 			}
 			
 			Log.d("better", "updated table -->" + neighbours.toString());
-		}
-		
-		else if(receivedHeader.equals(String.valueOf(Constants.DISCONNECTED)))
-		{
-			final String receivedBody = new String(body);
-			String [] nodes = receivedBody.split(",");
 			
-			for(int i=0; i<nodes.length; i++)
-			{
-				if(nodes[i].length() > 1)
-				{
-					neighbours.remove(nodes[i]);
-					Log.d("better", "removing " + nodes[i] + " ...");
+			
+			lblLog.post(new Runnable() {
+				
+				@Override
+				public void run() {
+					lblLog.setText(lblLog.getText().toString() + "Node diconnected: " + neighbours.toString() + "\n");
+					
 				}
-			}
+			});
 			
-			Log.d("better", "updated table -->" + neighbours.toString());
+			
+			
 		}
 		
 		else if(receivedHeader.equals(String.valueOf(Constants.TABLE_DATA)))
@@ -353,6 +383,19 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 			neighbours.add(MiddlewareUtil.KNOWN_HOST + ":" + Constants.PERMANET_AP_PORT);
 			
 			Log.d("better", "TABLE_DATA --> neighbours" + neighbours.toString());
+			
+			
+			lblLog.post(new Runnable() {
+				
+				@Override
+				public void run() {
+					
+					lblLog.setText(lblLog.getText().toString() + "Table data: " + neighbours.toString() + "\n");
+					
+				}
+			});
+			
+			
 		}
 		
 		else if(receivedHeader.equals(String.valueOf(Constants.DATA)))
@@ -368,6 +411,7 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 					public void run() {
 						Log.d("better", "setting bitmap...");
 						imgPresenter.setImageBitmap(bmp);
+						lblLog.setText(lblLog.getText().toString() + "Data Received" + "\n");
 					}
 				});
 			}
@@ -409,6 +453,18 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 						Socket outSocket = null;
 						try
 						{
+							
+							handler.post(new Runnable() {
+								
+								@Override
+								public void run() {
+									
+									lblLog.setText(lblLog.getText().toString() + "sending data to " + nodeAddress.toString() + " ..." + "\n");
+									
+								}
+							});
+							
+							
 							outSocket = new Socket(nodeAddress, new Integer(address[1])); 
 							OutputStream out = outSocket.getOutputStream();
 							out.write(packet.getMiddleWareData());
@@ -436,15 +492,37 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
     @Override
 	public void nodeAdded(Node node) {
 		
+    	final String info = node.getAddress().toString()+":"+node.getPort();
 		Log.d("better", "Node Added!");
-		Log.d("better", node.getAddress().toString()+":"+node.getPort());
+		Log.d("better", info);
+		
+		handler.post(new Runnable() {
+			
+			@Override
+			public void run() {
+				
+				neighbours.add(info);
+				lblLog.setText(lblLog.getText().toString() + "Node Added ... " + info + "\n");
+			}
+		});
 	}
 
 	@Override
 	public void nodeRemoved(Node node) {
 		
-		Log.d("better", "Node Added!");
-		Log.d("better", node.getAddress().toString()+":"+node.getPort());
+		final String info = node.getAddress().toString()+":"+node.getPort();
+		Log.d("better", "Node Removed!");
+		Log.d("better", info);
+		
+		handler.post(new Runnable() {
+			
+			@Override
+			public void run() {
+				
+				neighbours.remove(info);
+				lblLog.setText(lblLog.getText().toString() + "Node Removed ... " + info + "\n");
+			}
+		});
 	}
 
 	@Override
@@ -472,6 +550,19 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 				accessPoint.startReceiverThread();
 				
 				isAccessPoint = true;
+				
+				neighbours.clear();
+				
+				lblLog.post(new Runnable() {
+					
+					@Override
+					public void run() {
+						
+						lblLog.setText(lblLog.getText().toString() + "New Access Point Created" + "\n");
+						
+					}
+				});
+				
 			}
 			catch(Exception e)
 			{
@@ -494,6 +585,19 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 				{
 					status = MiddlewareUtil.connectToNetwork(getApplicationContext(), username, password);
 				}
+				
+				
+				neighbours.clear();
+				
+				lblLog.post(new Runnable() {
+					
+					@Override
+					public void run() {
+						
+						lblLog.setText(lblLog.getText().toString() + "Connected to Access Point" + "\n");
+					}
+				});
+				
 				
 				Log.d("better", "joining.....");
 				Thread.sleep(8000);
@@ -529,6 +633,7 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 	    				status = true;
 	    				
 	    				Log.d("better", "New Node Created!");
+	    				
 					}
 					catch(Exception e)
 					{
@@ -538,6 +643,20 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 					
 					Log.d("better", "joined!");
 				}
+				
+				
+				if(status)
+				{
+					lblLog.post(new Runnable() {
+    					
+    					@Override
+    					public void run() {
+    						
+    						lblLog.setText(lblLog.getText().toString() + "Joined to the Access Point" + "\n");
+    					}
+    				});
+				}
+				
 				
 			}
 			catch(Exception e)
