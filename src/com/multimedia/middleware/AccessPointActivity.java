@@ -210,7 +210,8 @@ public class AccessPointActivity extends Activity implements DataReceived, Addre
 		byte [] header = {(byte)Constants.CONNECTION_PROFILE};
 		String nodeProfile = state.toString();
 		packet.setPacketData(header, nodeProfile.getBytes());
-		InetAddress address = InetAddress.getAllByName(MiddlewareUtil.getIPAddress().get(0))[0];
+		//InetAddress address = InetAddress.getAllByName(MiddlewareUtil.getIPAddress().get(0))[0];
+		InetAddress address = InetAddress.getAllByName(MiddlewareUtil.KNOWN_HOST)[0];
 		node.sendData(packet, address, port);
 		status = true;
     	
@@ -226,8 +227,8 @@ public class AccessPointActivity extends Activity implements DataReceived, Addre
 		byte [] header = {(byte)Constants.REQUEST_TABLE};
 		String data = "data";
 		packet.setPacketData(header, data.getBytes());
-		//InetAddress address = InetAddress.getAllByName("192.168.43.1")[0];
-		InetAddress address = InetAddress.getAllByName(MiddlewareUtil.getIPAddress().get(0))[0];
+		//InetAddress address = InetAddress.getAllByName(MiddlewareUtil.getIPAddress().get(0))[0];
+		InetAddress address = InetAddress.getAllByName(MiddlewareUtil.KNOWN_HOST)[0];
 		node.sendData(packet, address, Constants.PERMANET_AP_PORT);
 		
 		status = true;
@@ -526,7 +527,7 @@ public class AccessPointActivity extends Activity implements DataReceived, Addre
 			}
 			
 			//finally add the access point itself
-			neighbours.add(MiddlewareUtil.getIPAddress().get(0) + ":" + Constants.PERMANET_AP_PORT);
+			neighbours.add(MiddlewareUtil.KNOWN_HOST + ":" + Constants.PERMANET_AP_PORT);
 			
 			Log.d("better", "TABLE_DATA --> neighbours" + neighbours.toString());
 		}
