@@ -54,13 +54,15 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
     
     //app_config.csv
     Integer file_names [] = {
+    		R.raw.sound,
     		R.raw.misson,
-    		R.raw.bbc,
+    		R.raw.bbc
 	};
     
     Integer slides [] = {
-    		R.drawable.one,
-    		R.drawable.two,
+    		R.drawable.ten,
+    		R.drawable.ten,
+    		R.drawable.ten
 	};
     
     
@@ -353,7 +355,9 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 					
 					try
 					{
-						File tempMp3 = File.createTempFile("kurchina", "mp3", getCacheDir());
+						//getCacheDir()
+						File tempMp3 = File.createTempFile("kurchina", "mp3", getCacheDir()
+								);
 				        tempMp3.deleteOnExit();
 				        FileOutputStream fos = new FileOutputStream(tempMp3);
 				        fos.write(body);

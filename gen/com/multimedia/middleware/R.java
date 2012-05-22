@@ -16,8 +16,9 @@ public final class R {
         public static final int ic_launcher=0x7f020002;
         public static final int one=0x7f020003;
         public static final int six=0x7f020004;
-        public static final int three=0x7f020005;
-        public static final int two=0x7f020006;
+        public static final int ten=0x7f020005;
+        public static final int three=0x7f020006;
+        public static final int two=0x7f020007;
     }
     public static final class id {
         public static final int btnAccessPointMode=0x7f070008;
@@ -47,6 +48,7 @@ public final class R {
         public static final int com=0x7f040002;
         public static final int lcd=0x7f040003;
         public static final int misson=0x7f040004;
+        public static final int sound=0x7f040005;
     }
     public static final class string {
         public static final int access_point=0x7f050008;
