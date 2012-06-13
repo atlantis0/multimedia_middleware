@@ -334,7 +334,11 @@ public class AccessPointActivity extends Activity implements DataReceived, Addre
         
 		if(receivedHeader.equals(String.valueOf(Constants.NEW_NODE)))
 		{
-			final String receivedBody = new String(body);
+			String receivedBody = new String(body);
+			
+			receivedBody = receivedBody.replace("[", "");
+			receivedBody = receivedBody.replace("]", "");
+			
 			String [] nodes = receivedBody.split(",");
 			
 			for(int i=0; i<nodes.length; i++)
@@ -344,6 +348,10 @@ public class AccessPointActivity extends Activity implements DataReceived, Addre
 					neighbours.add(nodes[i]);
 				}
 			}
+			
+			//finally add the access point itself
+			//if it is already there, replace it
+			neighbours.add(MiddlewareUtil.KNOWN_HOST + ":" + Constants.PERMANET_AP_PORT);
 			
 			Log.d("better", "updated table -->" + neighbours.toString());
 			

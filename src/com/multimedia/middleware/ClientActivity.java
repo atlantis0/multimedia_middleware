@@ -9,6 +9,8 @@ import java.util.Iterator;
 import java.util.Random;
 import java.util.Set;
 
+import org.apache.commons.io.IOUtils;
+
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -51,6 +53,9 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
     int voltage = -1;
     int temp = -1;
     
+	long begin;
+	long end;
+	
     int slides [] = {
     		R.drawable.ic_launcher,
     		R.drawable.one,
@@ -124,10 +129,18 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
         	{
         		byte[] imageBytes = null;
         		
+        		//x = [9400 23000 31700 57000 74600 108000 198300]
+        		 //z = [7963333 16430000 17823334 33086666 32223333 175983333 200266663]
+        				 //y = [2000000 1825000 1843334 2150000 2253333 115738331 129038333]
+
         		try
         		{
         			InputStream is = getApplicationContext().getResources().openRawResource(slide_raw[arg2]);
+        			begin = System.nanoTime();
             		imageBytes = org.apache.commons.io.IOUtils.toByteArray(is);
+            		end = System.nanoTime();
+            		Log.d("better", "encode the data ..." + String.valueOf(end-begin) + "\n");
+            		
         		}
         		catch(Exception e)
         		{
@@ -135,6 +148,20 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
         			e.printStackTrace();
         		}
         		
+        		System.out.println("this is it");
+        		
+        		Set<String> only = new HashSet<String>();
+        		only.add(MiddlewareUtil.KNOWN_HOST + ":" + Constants.PERMANET_AP_PORT);
+        		
+        		begin = System.nanoTime();
+        		
+        		broadCastData(Constants.DATA, imageBytes, node, only);
+        		
+        		end = System.nanoTime();
+        		
+        		Log.d("better", "network time..." + String.valueOf(end-begin) + "\n");
+        		
+        		/*
         		if(!isAccessPoint)
         		{
             		broadCastData(Constants.DATA, imageBytes, node, neighbours);
@@ -143,6 +170,8 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
         		{
         			broadCastData(Constants.DATA, imageBytes, accessPoint, neighbours);
         		}
+        		*/
+        		
         		
         		Toast.makeText(getApplicationContext(), "Selected", Toast.LENGTH_SHORT).show();
         		imgPresenter.setImageResource(slides[arg2]);
@@ -303,7 +332,10 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
         
 		if(receivedHeader.equals(String.valueOf(Constants.NEW_NODE)))
 		{
-			final String receivedBody = new String(body);
+			String receivedBody = new String(body);
+			receivedBody = receivedBody.replace("[", "");
+			receivedBody = receivedBody.replace("]", "");
+			
 			String [] nodes = receivedBody.split(",");
 			
 			for(int i=0; i<nodes.length; i++)
@@ -313,6 +345,9 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 					neighbours.add(nodes[i]);
 				}
 			}
+			
+			//finally add the access point itself
+			neighbours.add(MiddlewareUtil.KNOWN_HOST + ":" + Constants.PERMANET_AP_PORT);
 			
 			Log.d("better", "updated table -->" + neighbours.toString());
 			
@@ -403,7 +438,14 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 			try
 			{
 				Log.d("better", "receiving..." + body.toString());
+				
+				begin = System.nanoTime();
+				
 				final Bitmap bmp=BitmapFactory.decodeByteArray(body,0,body.length);
+				
+				end = System.nanoTime();
+				
+				Log.d("better", "decode the data ... " + String.valueOf(end-begin) + "\n");
 				
 				imgPresenter.post(new Runnable() {
 					
@@ -492,7 +534,14 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
     @Override
 	public void nodeAdded(Node node) {
 		
-    	final String info = node.getAddress().toString()+":"+node.getPort();
+    	String temp = node.getAddress().toString() + ":"+node.getPort();
+    	int t = temp.indexOf("/");
+		temp = temp.subSequence(t+1, temp.length()).toString();
+		
+		final String info = temp;
+		
+    	Log.d("better", "Added ... " + info);
+    	
 		Log.d("better", "Node Added!");
 		Log.d("better", info);
 		
@@ -500,7 +549,6 @@ public class ClientActivity extends Activity implements DataReceived, CreatePerm
 			
 			@Override
 			public void run() {
-				
 				neighbours.add(info);
 				lblLog.setText(lblLog.getText().toString() + "Node Added ... " + info + "\n");
 			}
